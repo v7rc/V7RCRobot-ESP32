@@ -1,5 +1,7 @@
 # Quick Start (Education) — 10 Minutes
 
+Languages: `繁中` | [English](QUICK_START_EDU.en.md) | [简中](QUICK_START_EDU.zh-CN.md) | [日本語](QUICK_START_EDU.ja.md)
+
 目標：用 **ESP32-C3** 在 10 分鐘內把車「動起來」，並能用 **V7RC App（V7RCDOM V2.0）** 連線控制。
 
 ---

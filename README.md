@@ -1,5 +1,7 @@
 # V7RCRobot-esp32
 
+Languages: `繁中` | [English](README.en.md) | [简中](README.zh-CN.md) | [日本語](README.ja.md)
+
 `V7RCRobot-esp32` 是一個明確鎖定 ESP32 的 V7RC 多載具控制平台初始化 repo。
 
 目前這個 repo 的重點不是一次把所有新架構實作完，而是先把專案整理成適合後續重構的骨架：

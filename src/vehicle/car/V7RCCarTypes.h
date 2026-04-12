@@ -36,6 +36,15 @@ struct V7RCCarRobotOptions {
   const char* bleBaseName;
   V7RC_DCMotorConfig* motors;
   uint8_t numMotors;
+  uint8_t differentialThrottleChannel;
+  uint8_t differentialSteerChannel;
+  uint8_t mecanumVxChannel;
+  uint8_t mecanumVyChannel;
+  uint8_t mecanumOmegaChannel;
+  V7RC_ServoConfig* servos;
+  uint8_t numServos;
+  uint8_t auxiliaryServo0Channel;
+  uint8_t auxiliaryServo1Channel;
   uint8_t ws2812Brightness;
   bool ws2812Enable;
   uint8_t ws2812Pin;

@@ -31,6 +31,7 @@ Arduino IDE → Tools → Manage Libraries：
 - Runtime Demo 差速車：`examples/ESP32_C3_Differential_Runtime_Demo/ESP32_C3_Differential_Runtime_Demo.ino`
 - Runtime Demo 車體：`examples/ESP32_C3_Car_Runtime_Demo/ESP32_C3_Car_Runtime_Demo.ino`
 - Runtime Demo 麥克納姆：`examples/ESP32_C3_Mecanum_Runtime_Demo/ESP32_C3_Mecanum_Runtime_Demo.ino`
+- V7RC BLE 麥克納姆控制：`examples/ESP32_C3_Mecanum_V7RC_BLE_Control/ESP32_C3_Mecanum_V7RC_BLE_Control.ino`
 - 乾淨版麥克納姆：`examples/ESP32_C3_Mini_Mecanum_Clean/ESP32_C3_Mini_Mecanum_Clean.ino`
 - Runtime Demo 坦克：`examples/ESP32_C3_Tank_Runtime_Demo/ESP32_C3_Tank_Runtime_Demo.ino`
 - Drone Runtime Demo：`examples/ESP32_C3_Drone_Runtime_Demo/ESP32_C3_Drone_Runtime_Demo.ino`
@@ -54,6 +55,11 @@ Arduino IDE → Tools → Manage Libraries：
 ```
 
 使用 car facade。
+
+注意：
+
+- `*_Runtime_Demo` 是本地 runtime / mixer 驗證用，不會等 V7RC App 的 BLE 指令
+- 如果你要真的用 V7RC App 開車，請優先用 `ESP32_C3_Mecanum_V7RC_BLE_Control` 或 `ESP32_C3_Mini_Mecanum_Clean`
 
 如果你要直接試四足 runtime，則可透過：
 

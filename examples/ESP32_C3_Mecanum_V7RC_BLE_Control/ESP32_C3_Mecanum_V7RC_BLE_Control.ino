@@ -11,6 +11,7 @@ V7RC_ServoConfig servos[] = {
   {6, 1000, 2000, 0.0f, 90.0f, 45.0f},
 };
 
+// Update these pins to match your actual motor driver wiring.
 V7RC_DCMotorConfig motors[] = {
   {20, 21, false},  // front-left
   {10, 0, false},   // front-right
@@ -26,7 +27,7 @@ V7RCCarRobotOptions robotOptions = {
   .differentialSteerChannel = 1,
   .mecanumVxChannel = 0,
   .mecanumVyChannel = 1,
-  .mecanumOmegaChannel = 2,
+  .mecanumOmegaChannel = 3,
   .servos = servos,
   .numServos = sizeof(servos) / sizeof(servos[0]),
   .auxiliaryServo0Channel = 2,
@@ -49,6 +50,11 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
+  Serial.println("Starting V7RC BLE mecanum control example.");
+  Serial.println("Use the V7RC App layout: ch0=Vx, ch1=Vy, ch3=Omega, ch2=Servo(GPIO7), ch5=Servo(GPIO6).");
+
+  // This path uses the BLE transport + V7RC protocol decode + legacy-compatible
+  // car facade, so the robot can be driven directly from the V7RC App.
   robot.beginMecanum(robotIdFromBleMac(), robotOptions, 0, 1, 2, 3);
 }
 

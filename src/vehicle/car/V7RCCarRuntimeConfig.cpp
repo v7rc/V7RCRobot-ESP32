@@ -16,8 +16,8 @@ void V7RCCarRuntimeConfig::clearChannelMap() {
 
 void V7RCCarRuntimeConfig::fillCommonConfig(const V7RCCarRobotOptions& options) {
   config_.bleBaseName = options.bleBaseName;
-  config_.servos = nullptr;
-  config_.numServos = 0;
+  config_.servos = options.servos;
+  config_.numServos = options.numServos;
   config_.smooth = smooth_;
   config_.waveDemoServoIndex = -1;
   config_.dcMotors = options.motors;
@@ -37,8 +37,20 @@ const V7RC_DriverConfig& V7RCCarRuntimeConfig::buildDifferential(
   int rightMotorIndex
 ) {
   clearChannelMap();
-  channelMap_[0].role = CH_DRIVE_THROTTLE;
-  channelMap_[1].role = CH_DRIVE_STEER;
+  if (options.differentialThrottleChannel < 16) {
+    channelMap_[options.differentialThrottleChannel].role = CH_DRIVE_THROTTLE;
+  }
+  if (options.differentialSteerChannel < 16) {
+    channelMap_[options.differentialSteerChannel].role = CH_DRIVE_STEER;
+  }
+  if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
+    channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
+    channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
+  }
+  if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
+    channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
+    channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+  }
 
   driveConfig_.type = DRIVE_DIFF;
   driveConfig_.diffLeftMotor = leftMotorIndex;
@@ -60,9 +72,23 @@ const V7RC_DriverConfig& V7RCCarRuntimeConfig::buildMecanum(
   int rearRightMotorIndex
 ) {
   clearChannelMap();
-  channelMap_[0].role = CH_DRIVE_MEC_VX;
-  channelMap_[1].role = CH_DRIVE_MEC_VY;
-  channelMap_[2].role = CH_DRIVE_MEC_OMEGA;
+  if (options.mecanumVxChannel < 16) {
+    channelMap_[options.mecanumVxChannel].role = CH_DRIVE_MEC_VX;
+  }
+  if (options.mecanumVyChannel < 16) {
+    channelMap_[options.mecanumVyChannel].role = CH_DRIVE_MEC_VY;
+  }
+  if (options.mecanumOmegaChannel < 16) {
+    channelMap_[options.mecanumOmegaChannel].role = CH_DRIVE_MEC_OMEGA;
+  }
+  if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
+    channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
+    channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
+  }
+  if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
+    channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
+    channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+  }
 
   driveConfig_.type = DRIVE_MECANUM;
   driveConfig_.diffLeftMotor = -1;

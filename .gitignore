@@ -1,0 +1,23 @@
+.DS_Store
+
+# Arduino / build artifacts
+build/
+dist/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.elf
+*.bin
+*.hex
+
+# Arduino CLI / IDE temporary output
+.arduino/
+.arduinoIDE/
+
+# Editor folders
+.vscode/
+.idea/

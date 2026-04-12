@@ -1,0 +1,39 @@
+#######################################
+# Syntax Coloring Map For V7RCServoDriver
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+V7RCServoDriver            KEYWORD1
+V7RC_ServoConfig           KEYWORD1
+V7RC_DCMotorConfig         KEYWORD1
+V7RC_SmoothConfig          KEYWORD1
+V7RC_DriverConfig          KEYWORD1
+V7RC_DriveConfig           KEYWORD1
+V7RC_DriveType             KEYWORD1
+V7RC_ChannelConfig         KEYWORD1
+V7RC_ChannelRole           KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin                      KEYWORD2
+loop                       KEYWORD2
+setLedColor                KEYWORD2
+setAllLeds                 KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+DRIVE_NONE                 LITERAL1
+DRIVE_DIFF                 LITERAL1
+DRIVE_MECANUM              LITERAL1
+CH_NONE                    LITERAL1
+CH_SERVO                   LITERAL1
+CH_DC_MOTOR                LITERAL1
+CH_DRIVE_THROTTLE          LITERAL1
+CH_DRIVE_STEER             LITERAL1
+CH_DRIVE_MEC_VX            LITERAL1
+CH_DRIVE_MEC_VY            LITERAL1
+CH_DRIVE_MEC_OMEGA         LITERAL1

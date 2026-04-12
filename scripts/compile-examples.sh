@@ -35,6 +35,7 @@ compile_example "examples/ESP32_C3_Differential_Drive_Clean" "$BUILD_ROOT/diff-c
 compile_example "examples/ESP32_C3_Differential_Runtime_Demo" "$BUILD_ROOT/diff-runtime"
 compile_example "examples/ESP32_C3_Dog_Runtime_Demo" "$BUILD_ROOT/dog-runtime"
 compile_example "examples/ESP32_C3_Dog_Runtime_Demo_V2" "$BUILD_ROOT/dog-runtime-v2"
+compile_example "examples/ESP32_C3_Drone_V7RC_BLE_Control" "$BUILD_ROOT/drone-v7rc-ble"
 compile_example "examples/ESP32_C3_Drone_Runtime_Demo" "$BUILD_ROOT/drone-runtime"
 compile_example "examples/ESP32_C3_Mecanum_Runtime_Demo" "$BUILD_ROOT/mec-runtime"
 compile_example "examples/ESP32_C3_Mecanum_V7RC_BLE_Control" "$BUILD_ROOT/mec-v7rc-ble"

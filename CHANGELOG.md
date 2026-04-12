@@ -22,6 +22,7 @@
   - `ESP32_C3_Differential_Runtime_Demo`
   - `ESP32_C3_Dog_Runtime_Demo`
   - `ESP32_C3_Dog_Runtime_Demo_V2`
+  - `ESP32_C3_Drone_V7RC_BLE_Control`
   - `ESP32_C3_Drone_Runtime_Demo`
   - `ESP32_C3_Mecanum_Runtime_Demo`
   - `ESP32_C3_Mecanum_V7RC_BLE_Control`

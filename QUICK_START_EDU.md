@@ -36,6 +36,7 @@ Arduino IDE → Tools → Manage Libraries：
 - 乾淨版麥克納姆：`examples/ESP32_C3_Mini_Mecanum_Clean/ESP32_C3_Mini_Mecanum_Clean.ino`
 - Runtime Demo 坦克：`examples/ESP32_C3_Tank_Runtime_Demo/ESP32_C3_Tank_Runtime_Demo.ino`
 - Drone Runtime Demo：`examples/ESP32_C3_Drone_Runtime_Demo/ESP32_C3_Drone_Runtime_Demo.ino`
+- V7RC BLE Drone 控制：`examples/ESP32_C3_Drone_V7RC_BLE_Control/ESP32_C3_Drone_V7RC_BLE_Control.ino`
 - Dog Runtime Demo：`examples/ESP32_C3_Dog_Runtime_Demo/ESP32_C3_Dog_Runtime_Demo.ino`
 - Dog Runtime Demo V2：`examples/ESP32_C3_Dog_Runtime_Demo_V2/ESP32_C3_Dog_Runtime_Demo_V2.ino`
 - OTTO Runtime Demo：`examples/ESP32_C3_OTTO_Runtime_Demo/ESP32_C3_OTTO_Runtime_Demo.ino`

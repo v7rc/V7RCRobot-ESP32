@@ -21,9 +21,11 @@ private:
   V7RCDroneMotorMix mixOutputs(const V7RCDroneControlState& controlState, const V7RCDroneAttitude& attitude) const;
   uint16_t throttleToEscUs(float throttle) const;
   uint16_t mixToEscUs(float value) const;
+  float mixToDcNorm(float value) const;
   bool canFinishUnlock(const V7RCDroneControlState& controlState) const;
 
   V7RCEsp32ServoOutput escOutputs_[4];
+  V7RCEsp32DCMotorOutput dcMotorOutputs_[4];
   V7RCDroneRuntimeOptions options_;
   V7RCDroneImu* imu_;
   bool begun_;

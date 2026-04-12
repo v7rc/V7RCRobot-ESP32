@@ -1,6 +1,12 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../../legacy/V7RCServoDriver.h"
+
+enum V7RCDroneOutputMode : uint8_t {
+  V7RC_DRONE_OUTPUT_SERVO_PWM = 0,
+  V7RC_DRONE_OUTPUT_DC_MOTOR
+};
 
 struct V7RCDroneControlState {
   float throttle;  // 0..1
@@ -24,7 +30,10 @@ struct V7RCDroneMotorMix {
 };
 
 struct V7RCDroneRuntimeOptions {
+  V7RCDroneOutputMode outputMode;
   uint8_t motorPins[4];
+  V7RC_DCMotorConfig* dcMotors;
+  uint8_t numDCMotors;
   bool stabilizationEnabled;
   float maxTiltDeg;
   float rollKp;

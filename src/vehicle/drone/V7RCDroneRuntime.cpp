@@ -28,9 +28,21 @@ bool V7RCDroneRuntime::begin(const V7RCDroneRuntimeOptions& options, V7RCDroneIm
   imu_ = imu;
   stabilizationEnabled_ = options.stabilizationEnabled;
 
-  for (uint8_t i = 0; i < 4; ++i) {
-    escOutputs_[i].attach(options_.motorPins[i], options_.escMinUs, options_.escMaxUs);
-    escOutputs_[i].writeMicroseconds(options_.escMinUs);
+  if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
+    if (!options_.dcMotors || options_.numDCMotors < 4) {
+      begun_ = false;
+      return false;
+    }
+
+    for (uint8_t i = 0; i < 4; ++i) {
+      dcMotorOutputs_[i].attach(options_.dcMotors[i].pinDir, options_.dcMotors[i].pinPwm);
+      dcMotorOutputs_[i].stop();
+    }
+  } else {
+    for (uint8_t i = 0; i < 4; ++i) {
+      escOutputs_[i].attach(options_.motorPins[i], options_.escMinUs, options_.escMaxUs);
+      escOutputs_[i].writeMicroseconds(options_.escMinUs);
+    }
   }
 
   begun_ = true;
@@ -94,6 +106,14 @@ uint16_t V7RCDroneRuntime::mixToEscUs(float value) const {
   return throttleToEscUs(value);
 }
 
+float V7RCDroneRuntime::mixToDcNorm(float value) const {
+  value = clampUnit(value);
+  if (value < 0.0f) {
+    value = 0.0f;
+  }
+  return value;
+}
+
 void V7RCDroneRuntime::update(const V7RCDroneControlState& controlState, unsigned long nowMs) {
   if (!begun_) return;
 
@@ -104,7 +124,11 @@ void V7RCDroneRuntime::update(const V7RCDroneControlState& controlState, unsigne
 
   if (unlockPending_) {
     for (uint8_t i = 0; i < 4; ++i) {
-      escOutputs_[i].writeMicroseconds(options_.escMinUs);
+      if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
+        dcMotorOutputs_[i].stop();
+      } else {
+        escOutputs_[i].writeMicroseconds(options_.escMinUs);
+      }
     }
 
     if (!canFinishUnlock(controlState)) {
@@ -123,16 +147,27 @@ void V7RCDroneRuntime::update(const V7RCDroneControlState& controlState, unsigne
 
   if (!armed_) {
     for (uint8_t i = 0; i < 4; ++i) {
-      escOutputs_[i].writeMicroseconds(options_.escMinUs);
+      if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
+        dcMotorOutputs_[i].stop();
+      } else {
+        escOutputs_[i].writeMicroseconds(options_.escMinUs);
+      }
     }
     return;
   }
 
   V7RCDroneMotorMix mix = mixOutputs(controlState, lastAttitude_);
-  escOutputs_[0].writeMicroseconds(mixToEscUs(mix.frontLeft));
-  escOutputs_[1].writeMicroseconds(mixToEscUs(mix.frontRight));
-  escOutputs_[2].writeMicroseconds(mixToEscUs(mix.rearLeft));
-  escOutputs_[3].writeMicroseconds(mixToEscUs(mix.rearRight));
+  if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
+    dcMotorOutputs_[0].writeNormalized(mixToDcNorm(mix.frontLeft));
+    dcMotorOutputs_[1].writeNormalized(mixToDcNorm(mix.frontRight));
+    dcMotorOutputs_[2].writeNormalized(mixToDcNorm(mix.rearLeft));
+    dcMotorOutputs_[3].writeNormalized(mixToDcNorm(mix.rearRight));
+  } else {
+    escOutputs_[0].writeMicroseconds(mixToEscUs(mix.frontLeft));
+    escOutputs_[1].writeMicroseconds(mixToEscUs(mix.frontRight));
+    escOutputs_[2].writeMicroseconds(mixToEscUs(mix.rearLeft));
+    escOutputs_[3].writeMicroseconds(mixToEscUs(mix.rearRight));
+  }
 }
 
 void V7RCDroneRuntime::disarm() {
@@ -140,7 +175,11 @@ void V7RCDroneRuntime::disarm() {
   unlockPending_ = false;
   unlockStartMs_ = 0;
   for (uint8_t i = 0; i < 4; ++i) {
-    escOutputs_[i].writeMicroseconds(options_.escMinUs);
+    if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
+      dcMotorOutputs_[i].stop();
+    } else {
+      escOutputs_[i].writeMicroseconds(options_.escMinUs);
+    }
   }
 }
 

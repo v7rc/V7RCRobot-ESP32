@@ -4,15 +4,23 @@
 namespace {
 
 V7RCDroneRuntime runtime;
-V7RCMpu6050Imu imu;
+
+V7RC_DCMotorConfig motors[] = {
+  {20, 21, false},  // front-left
+  {10, 0, false},   // front-right
+  {1, 2, false},    // rear-left
+  {3, 4, false},    // rear-right
+};
 
 V7RCDroneControlState currentState = {0.0f, 0.0f, 0.0f, 0.0f};
-bool stabilizationEnabled = true;
-bool imuReady = false;
+bool stabilizationEnabled = false;
 
 V7RCDroneRuntimeOptions options = {
+  .outputMode = V7RC_DRONE_OUTPUT_DC_MOTOR,
   .motorPins = {20, 10, 1, 3},
-  .stabilizationEnabled = true,
+  .dcMotors = motors,
+  .numDCMotors = sizeof(motors) / sizeof(motors[0]),
+  .stabilizationEnabled = false,
   .maxTiltDeg = 18.0f,
   .rollKp = 0.85f,
   .pitchKp = 0.85f,
@@ -46,11 +54,10 @@ void handleSerial() {
   } else if (command == "STATUS") {
     V7RCDroneAttitude attitude = runtime.attitude();
     Serial.printf(
-      "armed=%d unlockPending=%d stabilize=%d imu=%d roll=%.2f pitch=%.2f yawRate=%.2f\n",
+      "armed=%d unlockPending=%d stabilize=%d roll=%.2f pitch=%.2f yawRate=%.2f\n",
       runtime.isArmed() ? 1 : 0,
       runtime.unlockInProgress() ? 1 : 0,
       runtime.stabilizationEnabled() ? 1 : 0,
-      imuReady ? 1 : 0,
       attitude.rollDeg,
       attitude.pitchDeg,
       attitude.yawRateDegPerSec
@@ -85,14 +92,11 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  imuReady = runtime.begin(options, &imu);
+  runtime.begin(options, nullptr);
   runtime.setStabilizationEnabled(stabilizationEnabled);
 
-  Serial.println("Drone runtime ready.");
+  Serial.println("Drone runtime ready (DC motor mode, IMU disabled).");
   Serial.println("Commands: ARM, DISARM, STABILIZE ON, STABILIZE OFF, STATUS");
-  if (!imuReady) {
-    Serial.println("MPU6050 init failed. Stabilization data will be invalid until sensor responds.");
-  }
 }
 
 void loop() {

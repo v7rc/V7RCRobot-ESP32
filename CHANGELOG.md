@@ -27,5 +27,6 @@
   - `ESP32_C3_Mecanum_V7RC_BLE_Control`
   - `ESP32_C3_OTTO_Runtime_Demo`
   - `ESP32_C3_RobotARM_Runtime_Demo`
+  - `ESP32_C3_Tank_V7RC_BLE_Control`
   - `ESP32_C3_Tank_Runtime_Demo`
 - 建立 compile / lint 驗證腳本

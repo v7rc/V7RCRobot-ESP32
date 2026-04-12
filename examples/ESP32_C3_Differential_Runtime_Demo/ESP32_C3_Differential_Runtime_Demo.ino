@@ -49,6 +49,7 @@ void setup() {
     .numServos = 0,
     .auxiliaryServo0Channel = 15,
     .auxiliaryServo1Channel = 15,
+    .auxiliaryServo2Channel = 15,
     .ws2812Brightness = 0,
     .ws2812Enable = false,
     .ws2812Pin = 0,

@@ -24,6 +24,7 @@ public:
 private:
   void clearChannelMap();
   void fillCommonConfig(const V7RCCarRobotOptions& options);
+  void applyCustomChannelMap(const V7RCCarRobotOptions& options);
 
   V7RC_DriverConfig config_;
   V7RC_SmoothConfig smooth_;

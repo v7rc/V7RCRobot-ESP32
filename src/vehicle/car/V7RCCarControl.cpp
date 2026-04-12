@@ -69,9 +69,14 @@ void V7RCCarControl::normalize(V7RCCarMotorMix* mix) {
 }
 
 V7RCCarMotorMix V7RCCarControl::mixDifferential(float throttle, float steer) {
+  // Align differential input directions with the physical tank/car wiring used
+  // by the shipped examples.
+  throttle = -throttle;
+  steer = -steer;
+
   V7RCCarMotorMix mix;
   mix.frontLeft = clampUnit(throttle + steer);
-  mix.frontRight = clampUnit(throttle - steer);
+  mix.frontRight = clampUnit(-(throttle - steer));
   mix.rearLeft = mix.frontLeft;
   mix.rearRight = mix.frontRight;
   normalize(&mix);

@@ -14,6 +14,13 @@ void V7RCCarRuntimeConfig::clearChannelMap() {
   }
 }
 
+void V7RCCarRuntimeConfig::applyCustomChannelMap(const V7RCCarRobotOptions& options) {
+  const uint8_t count = (options.numCustomChannelMap < 16) ? options.numCustomChannelMap : 16;
+  for (uint8_t i = 0; i < count; ++i) {
+    channelMap_[i] = options.customChannelMap[i];
+  }
+}
+
 void V7RCCarRuntimeConfig::fillCommonConfig(const V7RCCarRobotOptions& options) {
   config_.bleBaseName = options.bleBaseName;
   config_.servos = options.servos;
@@ -37,19 +44,27 @@ const V7RC_DriverConfig& V7RCCarRuntimeConfig::buildDifferential(
   int rightMotorIndex
 ) {
   clearChannelMap();
-  if (options.differentialThrottleChannel < 16) {
-    channelMap_[options.differentialThrottleChannel].role = CH_DRIVE_THROTTLE;
-  }
-  if (options.differentialSteerChannel < 16) {
-    channelMap_[options.differentialSteerChannel].role = CH_DRIVE_STEER;
-  }
-  if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
-    channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
-    channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
-  }
-  if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
-    channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
-    channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+  if (options.customChannelMap && options.numCustomChannelMap > 0) {
+    applyCustomChannelMap(options);
+  } else {
+    if (options.differentialThrottleChannel < 16) {
+      channelMap_[options.differentialThrottleChannel].role = CH_DRIVE_THROTTLE;
+    }
+    if (options.differentialSteerChannel < 16) {
+      channelMap_[options.differentialSteerChannel].role = CH_DRIVE_STEER;
+    }
+    if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
+      channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
+    }
+    if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
+      channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+    }
+    if (options.numServos > 2 && options.auxiliaryServo2Channel < 16) {
+      channelMap_[options.auxiliaryServo2Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo2Channel].targetIndex = 2;
+    }
   }
 
   driveConfig_.type = DRIVE_DIFF;
@@ -72,22 +87,30 @@ const V7RC_DriverConfig& V7RCCarRuntimeConfig::buildMecanum(
   int rearRightMotorIndex
 ) {
   clearChannelMap();
-  if (options.mecanumVxChannel < 16) {
-    channelMap_[options.mecanumVxChannel].role = CH_DRIVE_MEC_VX;
-  }
-  if (options.mecanumVyChannel < 16) {
-    channelMap_[options.mecanumVyChannel].role = CH_DRIVE_MEC_VY;
-  }
-  if (options.mecanumOmegaChannel < 16) {
-    channelMap_[options.mecanumOmegaChannel].role = CH_DRIVE_MEC_OMEGA;
-  }
-  if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
-    channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
-    channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
-  }
-  if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
-    channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
-    channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+  if (options.customChannelMap && options.numCustomChannelMap > 0) {
+    applyCustomChannelMap(options);
+  } else {
+    if (options.mecanumVxChannel < 16) {
+      channelMap_[options.mecanumVxChannel].role = CH_DRIVE_MEC_VX;
+    }
+    if (options.mecanumVyChannel < 16) {
+      channelMap_[options.mecanumVyChannel].role = CH_DRIVE_MEC_VY;
+    }
+    if (options.mecanumOmegaChannel < 16) {
+      channelMap_[options.mecanumOmegaChannel].role = CH_DRIVE_MEC_OMEGA;
+    }
+    if (options.numServos > 0 && options.auxiliaryServo0Channel < 16) {
+      channelMap_[options.auxiliaryServo0Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo0Channel].targetIndex = 0;
+    }
+    if (options.numServos > 1 && options.auxiliaryServo1Channel < 16) {
+      channelMap_[options.auxiliaryServo1Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo1Channel].targetIndex = 1;
+    }
+    if (options.numServos > 2 && options.auxiliaryServo2Channel < 16) {
+      channelMap_[options.auxiliaryServo2Channel].role = CH_SERVO;
+      channelMap_[options.auxiliaryServo2Channel].targetIndex = 2;
+    }
   }
 
   driveConfig_.type = DRIVE_MECANUM;

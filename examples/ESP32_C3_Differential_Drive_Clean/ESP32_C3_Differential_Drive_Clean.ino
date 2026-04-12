@@ -24,6 +24,7 @@ V7RCCarRobotOptions robotOptions = {
   .numServos = 0,
   .auxiliaryServo0Channel = 15,
   .auxiliaryServo1Channel = 15,
+  .auxiliaryServo2Channel = 15,
   .ws2812Brightness = 50,
   .ws2812Enable = true,
   .ws2812Pin = 8,

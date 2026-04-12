@@ -79,6 +79,10 @@ V7RCCarMotorMix V7RCCarControl::mixDifferential(float throttle, float steer) {
 }
 
 V7RCCarMotorMix V7RCCarControl::mixMecanum(float vx, float vy, float omega) {
+  // Align Vx with the physical mecanum direction used by the shipped examples:
+  // positive Vx should match the user's intuitive X-axis strafe direction.
+  vx = -vx;
+
   V7RCCarMotorMix mix;
   mix.frontLeft = vy - vx + omega;
   mix.frontRight = vy + vx - omega;

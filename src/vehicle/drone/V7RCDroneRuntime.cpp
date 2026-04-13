@@ -75,16 +75,24 @@ V7RCDroneMotorMix V7RCDroneRuntime::mixOutputs(const V7RCDroneControlState& cont
   float rollCorrection = 0.0f;
   float pitchCorrection = 0.0f;
   float yawRateCorrection = 0.0f;
+  const float desiredYawRateDegPerSec = clampUnit(controlState.yaw) * options_.maxYawRateDegPerSec;
+
   if (stabilizationEnabled_ && attitude.valid) {
     rollCorrection = (desiredRollDeg - attitude.rollDeg) * options_.rollKp / options_.maxTiltDeg;
     pitchCorrection = (desiredPitchDeg - attitude.pitchDeg) * options_.pitchKp / options_.maxTiltDeg;
-    yawRateCorrection = (-attitude.yawRateDegPerSec) * options_.yawRateKp;
   } else {
     rollCorrection = desiredRollDeg / options_.maxTiltDeg;
     pitchCorrection = desiredPitchDeg / options_.maxTiltDeg;
   }
 
-  const float yawComponent = clampUnit(controlState.yaw) * options_.yawGain + yawRateCorrection;
+  if (attitude.valid) {
+    const float yawRateErrorDegPerSec = desiredYawRateDegPerSec - attitude.yawRateDegPerSec;
+    yawRateCorrection = yawRateErrorDegPerSec * options_.yawRateKp;
+  } else {
+    yawRateCorrection = clampUnit(controlState.yaw) * options_.yawGain;
+  }
+
+  const float yawComponent = clampUnit(yawRateCorrection);
   const float base = clampUnit(controlState.throttle);
 
   V7RCDroneMotorMix mix;

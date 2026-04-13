@@ -15,6 +15,9 @@ enum V7RCDroneImuSelection : uint8_t {
 static const uint8_t kImuSdaPin = 5;
 static const uint8_t kImuSclPin = 6;
 static const V7RCDroneImuSelection kImuSelection = V7RC_DRONE_IMU_ICM20948;
+static const int16_t kStabilizeOffThreshold = 1300;
+static const int16_t kStabilizeOnThreshold = 1700;
+static const unsigned long kSignalTimeoutMs = 300;
 
 V7RCDroneRuntime runtime;
 V7RCAdxl345Imu adxl345Imu(kImuSdaPin, kImuSclPin);
@@ -29,9 +32,13 @@ V7RC_DCMotorConfig motors[] = {
 };
 
 V7RCDroneControlState controlState = {0.0f, 0.0f, 0.0f, 0.0f};
-bool stabilizationEnabled = false;
+bool stabilizationEnabled = (kImuSelection != V7RC_DRONE_IMU_NONE);
 bool controlUnlocked = false;
 unsigned long lastTelemetryMs = 0;
+unsigned long lastSignalMs = 0;
+bool signalTimedOut = false;
+bool wasCalibrating = false;
+bool wasArmed = false;
 
 char frameBuffer[48];
 size_t frameLength = 0;
@@ -41,10 +48,10 @@ V7RCDroneRuntimeOptions options = {
   .motorPins = {20, 10, 1, 3},
   .dcMotors = motors,
   .numDCMotors = sizeof(motors) / sizeof(motors[0]),
-  .stabilizationEnabled = false,
+  .stabilizationEnabled = true,
   .maxTiltDeg = 18.0f,
-  .rollKp = 0.85f,
-  .pitchKp = 0.85f,
+  .rollKp = 0.20f,
+  .pitchKp = 0.20f,
   .yawGain = 0.35f,
   .yawRateDampingKp = 0.006f,
   .yawRateDeadbandDegPerSec = 8.0f,
@@ -159,11 +166,13 @@ bool isUnlockGesture(const V7RC_Frame& frame) {
 
 void applyFrame(const V7RC_Frame& frame) {
   if (!frame.valid || frame.type == V7RC_LED) return;
+  lastSignalMs = millis();
+  signalTimedOut = false;
 
   if (!controlUnlocked && isUnlockGesture(frame)) {
     controlUnlocked = true;
     runtime.beginUnlock();
-    Serial.println("Unlock gesture accepted. Entering standby; keep throttle low briefly, then control is enabled.");
+    Serial.println("Unlock gesture accepted. Keep throttle low; calibration will start after unlock.");
     return;
   }
 
@@ -185,7 +194,21 @@ void applyFrame(const V7RC_Frame& frame) {
     controlState.roll = normalizeBidirectional(frame.type, frame.values[3]);
   }
   if (frame.channelPresent[4]) {
-    stabilizationEnabled = normalizeBidirectional(frame.type, frame.values[4]) > 0.0f;
+    if (frame.type == V7RC_HEX || frame.type == V7RC_SRV || frame.type == V7RC_SS8) {
+      if (frame.values[4] <= kStabilizeOffThreshold) {
+        stabilizationEnabled = false;
+      } else if (frame.values[4] >= kStabilizeOnThreshold) {
+        stabilizationEnabled = true;
+      }
+    } else {
+      const float stabilizeSwitch = normalizeBidirectional(frame.type, frame.values[4]);
+      if (stabilizeSwitch <= -0.5f) {
+        stabilizationEnabled = false;
+      } else if (stabilizeSwitch >= 0.5f) {
+        stabilizationEnabled = true;
+      }
+    }
+
     runtime.setStabilizationEnabled(stabilizationEnabled);
   }
 }
@@ -218,6 +241,8 @@ void handleConnectionChanged(bool connected, void* context) {
     controlState = {0.0f, 0.0f, 0.0f, 0.0f};
     controlUnlocked = false;
     lastTelemetryMs = 0;
+    lastSignalMs = 0;
+    signalTimedOut = false;
     runtime.disarm();
     Serial.println("BLE disconnected. Drone locked.");
     return;
@@ -254,7 +279,7 @@ void setup() {
   // keep the axis order and only flip the sign of X or Y.
   icm20948Imu.setAxisTransform(
     V7RC_ICM20948_AXIS_Y,  -1,
-    V7RC_ICM20948_AXIS_X,  1,
+    V7RC_ICM20948_AXIS_X,  -1,
     V7RC_ICM20948_AXIS_Z,  1
   );
 
@@ -277,13 +302,40 @@ void setup() {
   );
   Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
   Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
+  Serial.println("Stabilization defaults to ON when IMU is enabled. ch4 <= 1300 turns it OFF, ch4 >= 1700 turns it ON.");
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
   Serial.println("BLE debug telemetry: CMD + THR + YAW + YRT + PIT + #");
+  Serial.println("After unlock: auto level calibration runs, then motors spin gently for 2s, then control is enabled.");
 }
 
 void loop() {
   transport.poll();
+
+  if (transport.isConnected() && lastSignalMs != 0 && (millis() - lastSignalMs) > kSignalTimeoutMs) {
+    controlState = {0.0f, 0.0f, 0.0f, 0.0f};
+    lastSignalMs = 0;
+    signalTimedOut = true;
+    Serial.println("BLE signal timeout. Motors stopped until control frames resume.");
+  }
+
   runtime.update(controlState, millis());
   sendDebugTelemetry(millis());
+
+  const bool calibrating = runtime.calibrationInProgress();
+  const bool readyCue = runtime.readyCueInProgress();
+  const bool armed = runtime.isArmed();
+
+  if (calibrating && !wasCalibrating) {
+    Serial.println("Drone calibration started. Keep the drone still.");
+  }
+  if (!calibrating && wasCalibrating && readyCue) {
+    Serial.println("Calibration complete. Motors will spin gently for 2 seconds.");
+  }
+  if (armed && !wasArmed) {
+    Serial.println("Drone is ready. Control is enabled.");
+  }
+
+  wasCalibrating = calibrating;
+  wasArmed = armed;
   delay(10);
 }

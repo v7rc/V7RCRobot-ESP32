@@ -16,6 +16,7 @@ public:
   bool update(unsigned long nowMs) override;
   V7RCDroneAttitude attitude() const override;
   const char* sensorName() const override;
+  bool calibrateGyroBias(uint16_t samples = 200, uint16_t sampleDelayMs = 2) override;
 
   float accelXg() const;
   float accelYg() const;
@@ -57,5 +58,9 @@ private:
   float gyroXDegPerSec_;
   float gyroYDegPerSec_;
   float gyroZDegPerSec_;
+  float gyroBiasXDegPerSec_;
+  float gyroBiasYDegPerSec_;
+  float gyroBiasZDegPerSec_;
+  bool filterPrimed_;
   V7RCDroneAttitude attitude_;
 };

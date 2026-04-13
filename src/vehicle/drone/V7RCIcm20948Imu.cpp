@@ -46,7 +46,11 @@ V7RCIcm20948Imu::V7RCIcm20948Imu(uint8_t sdaPin, uint8_t sclPin, uint8_t i2cAddr
     accelZg_(0.0f),
     gyroXDegPerSec_(0.0f),
     gyroYDegPerSec_(0.0f),
-    gyroZDegPerSec_(0.0f) {
+    gyroZDegPerSec_(0.0f),
+    gyroBiasXDegPerSec_(0.0f),
+    gyroBiasYDegPerSec_(0.0f),
+    gyroBiasZDegPerSec_(0.0f),
+    filterPrimed_(false) {
   attitude_.rollDeg = 0.0f;
   attitude_.pitchDeg = 0.0f;
   attitude_.yawRateDegPerSec = 0.0f;
@@ -151,6 +155,42 @@ bool V7RCIcm20948Imu::begin() {
   begun_ = true;
   lastUpdateMs_ = 0;
   attitude_.valid = false;
+  filterPrimed_ = false;
+  gyroBiasXDegPerSec_ = 0.0f;
+  gyroBiasYDegPerSec_ = 0.0f;
+  gyroBiasZDegPerSec_ = 0.0f;
+  return true;
+}
+
+bool V7RCIcm20948Imu::calibrateGyroBias(uint16_t samples, uint16_t sampleDelayMs) {
+  if (!begun_ || samples == 0) return false;
+
+  float sumX = 0.0f;
+  float sumY = 0.0f;
+  float sumZ = 0.0f;
+
+  for (uint16_t i = 0; i < samples; ++i) {
+    int16_t ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+    if (!readRaw(&ax, &ay, &az, &gx, &gy, &gz)) {
+      return false;
+    }
+
+    const float rawGyroXDegPerSec = (float)gx / kGyroScale;
+    const float rawGyroYDegPerSec = (float)gy / kGyroScale;
+    const float rawGyroZDegPerSec = (float)gz / kGyroScale;
+
+    sumX += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_);
+    sumY += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_);
+    sumZ += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_);
+
+    delay(sampleDelayMs);
+  }
+
+  gyroBiasXDegPerSec_ = sumX / samples;
+  gyroBiasYDegPerSec_ = sumY / samples;
+  gyroBiasZDegPerSec_ = sumZ / samples;
+  filterPrimed_ = false;
+  lastUpdateMs_ = 0;
   return true;
 }
 
@@ -195,14 +235,41 @@ bool V7RCIcm20948Imu::update(unsigned long nowMs) {
   const float rawGyroYDegPerSec = (float)gy / kGyroScale;
   const float rawGyroZDegPerSec = (float)gz / kGyroScale;
 
-  accelXg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalXSource_, logicalXSign_);
-  accelYg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalYSource_, logicalYSign_);
-  accelZg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalZSource_, logicalZSign_);
-  gyroXDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_);
-  gyroYDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_);
-  gyroZDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_);
+  const float mappedAccelXg = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalXSource_, logicalXSign_);
+  const float mappedAccelYg = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalYSource_, logicalYSign_);
+  const float mappedAccelZg = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalZSource_, logicalZSign_);
+  const float mappedGyroXDegPerSec =
+    axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_) -
+    gyroBiasXDegPerSec_;
+  const float mappedGyroYDegPerSec =
+    axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_) -
+    gyroBiasYDegPerSec_;
+  const float mappedGyroZDegPerSec =
+    axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_) -
+    gyroBiasZDegPerSec_;
 
-  const float accelRoll = atan2f(accelYg_, accelZg_) * 180.0f / PI;
+  if (!filterPrimed_) {
+    accelXg_ = mappedAccelXg;
+    accelYg_ = mappedAccelYg;
+    accelZg_ = mappedAccelZg;
+    gyroXDegPerSec_ = mappedGyroXDegPerSec;
+    gyroYDegPerSec_ = mappedGyroYDegPerSec;
+    gyroZDegPerSec_ = mappedGyroZDegPerSec;
+    filterPrimed_ = true;
+  } else {
+    const float accelAlpha = 0.20f;
+    const float gyroAlpha = 0.15f;
+    accelXg_ = accelXg_ + accelAlpha * (mappedAccelXg - accelXg_);
+    accelYg_ = accelYg_ + accelAlpha * (mappedAccelYg - accelYg_);
+    accelZg_ = accelZg_ + accelAlpha * (mappedAccelZg - accelZg_);
+    gyroXDegPerSec_ = gyroXDegPerSec_ + gyroAlpha * (mappedGyroXDegPerSec - gyroXDegPerSec_);
+    gyroYDegPerSec_ = gyroYDegPerSec_ + gyroAlpha * (mappedGyroYDegPerSec - gyroYDegPerSec_);
+    gyroZDegPerSec_ = gyroZDegPerSec_ + gyroAlpha * (mappedGyroZDegPerSec - gyroZDegPerSec_);
+  }
+
+  // Use small-angle attitude formulas that stay in a stable [-90, +90] range.
+  // This avoids roll jumping near 180 degrees when the mounting orientation flips Z.
+  const float accelRoll = atan2f(accelYg_, sqrtf(accelXg_ * accelXg_ + accelZg_ * accelZg_)) * 180.0f / PI;
   const float accelPitch = atan2f(-accelXg_, sqrtf(accelYg_ * accelYg_ + accelZg_ * accelZg_)) * 180.0f / PI;
 
   if (!attitude_.valid || dt <= 0.0f) {

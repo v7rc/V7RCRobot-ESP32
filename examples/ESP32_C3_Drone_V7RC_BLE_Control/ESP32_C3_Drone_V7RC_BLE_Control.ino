@@ -33,6 +33,7 @@ bool stabilizationEnabled = false;
 bool controlUnlocked = false;
 bool imuReady = false;
 bool gyroCalibrationOk = true;
+unsigned long lastTelemetryMs = 0;
 
 char frameBuffer[48];
 size_t frameLength = 0;
@@ -51,6 +52,8 @@ V7RCDroneRuntimeOptions options = {
   .escMaxUs = 2000,
   .escIdleUs = 1080,
 };
+
+static const unsigned long kTelemetryIntervalMs = 100;
 
 V7RCDroneImu* selectedImu() {
   if (kImuSelection == V7RC_DRONE_IMU_ADXL345) {
@@ -101,6 +104,41 @@ float normalizeThrottle(V7RC_ProtocolType protocolType, int16_t rawValue) {
   }
 
   return clampZeroToOne(((float)rawValue + 127.0f) / 254.0f);
+}
+
+int telemetryInt(float value, float scale) {
+  long scaled = lroundf(value * scale);
+  if (scaled > 999) scaled = 999;
+  if (scaled < -999) scaled = -999;
+  return (int)scaled;
+}
+
+void formatTelemetryField(char* out, int value) {
+  const int magnitude = abs(value);
+  out[0] = value < 0 ? '-' : '+';
+  out[1] = (char)('0' + ((magnitude / 100) % 10));
+  out[2] = (char)('0' + ((magnitude / 10) % 10));
+  out[3] = (char)('0' + (magnitude % 10));
+}
+
+void sendDebugTelemetry(unsigned long nowMs) {
+  if (!transport.isConnected()) return;
+  if ((nowMs - lastTelemetryMs) < kTelemetryIntervalMs) return;
+
+  lastTelemetryMs = nowMs;
+
+  const V7RCDroneAttitude attitude = runtime.attitude();
+
+  char packet[21];
+  memcpy(packet, "CMD", 3);
+  formatTelemetryField(packet + 3, telemetryInt(controlState.throttle, 100.0f));
+  formatTelemetryField(packet + 7, telemetryInt(controlState.yaw, 100.0f));
+  formatTelemetryField(packet + 11, telemetryInt(attitude.yawRateDegPerSec, 1.0f));
+  formatTelemetryField(packet + 15, telemetryInt(attitude.pitchDeg, 1.0f));
+  packet[19] = '#';
+  packet[20] = '\0';
+
+  transport.send((const uint8_t*)packet, 20);
 }
 
 bool isUnlockGesture(const V7RC_Frame& frame) {
@@ -188,6 +226,7 @@ void handleConnectionChanged(bool connected, void* context) {
     controlState = {0.0f, 0.0f, 0.0f, 0.0f};
     controlUnlocked = false;
     gyroCalibrationOk = true;
+    lastTelemetryMs = 0;
     runtime.disarm();
     Serial.println("BLE disconnected. Drone locked.");
     return;
@@ -250,10 +289,12 @@ void setup() {
   Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
   Serial.println("ICM20948 gyro bias calibration now runs after the unlock gesture is received.");
+  Serial.println("BLE debug telemetry: CMD + THR + YAW + YRT + PIT + #");
 }
 
 void loop() {
   transport.poll();
   runtime.update(controlState, millis());
+  sendDebugTelemetry(millis());
   delay(10);
 }

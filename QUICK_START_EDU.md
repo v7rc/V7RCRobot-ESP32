@@ -67,6 +67,7 @@ Arduino IDE → Tools → Manage Libraries：
 - `ESP32_C3_ADXL345_Integration_Check` 會單獨列印 ADXL345 的 `ax/ay/az(g)` 與 `roll/pitch`，適合先驗證 I2C 接線與感測器輸出
 - `ESP32_C3_Drone_V7RC_BLE_Control` 支援在 sketch 頂部切換 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，目前預設為 `ICM20948`
 - 如果你要真的用 V7RC App 開車，請優先用 `ESP32_C3_Mecanum_V7RC_BLE_Control` 或 `ESP32_C3_Mini_Mecanum_Clean`
+- 如果你在 Drone 測試時遇到「自轉、翻覆、軸向反了」，請直接照 [docs/DRONE_SANITY_CHECKLIST.md](/Users/louischuang/Documents/Arduino/libraries/V7RCRobot-ESP32/docs/DRONE_SANITY_CHECKLIST.md) 的順序排查
 
 如果你要直接試四足 runtime，則可透過：
 

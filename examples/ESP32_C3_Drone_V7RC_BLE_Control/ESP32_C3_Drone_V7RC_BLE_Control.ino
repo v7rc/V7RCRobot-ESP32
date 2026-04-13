@@ -202,6 +202,35 @@ void setup() {
   //   V7RC_ADXL345_AXIS_X, -1,
   //   V7RC_ADXL345_AXIS_Z,  1
   // );
+  //
+  // If you use ICM20948 and the mounting direction differs from the airframe logic,
+  // adjust the axis transform here.
+  //
+  // Default logical frame:
+  //   X = sensor X
+  //   Y = sensor Y
+  //   Z = sensor Z
+  //
+  // Example A: module rotated 90 degrees clockwise when viewed from above
+  // icm20948Imu.setAxisTransform(
+  //   V7RC_ICM20948_AXIS_Y,  1,
+  //   V7RC_ICM20948_AXIS_X, -1,
+  //   V7RC_ICM20948_AXIS_Z,  1
+  // );
+  //
+  // Example B: module rotated 90 degrees counter-clockwise when viewed from above
+  // icm20948Imu.setAxisTransform(
+  //   V7RC_ICM20948_AXIS_Y, -1,
+  //   V7RC_ICM20948_AXIS_X,  1,
+  //   V7RC_ICM20948_AXIS_Z,  1
+  // );
+  //
+  // Example C: module mounted upside down
+  // icm20948Imu.setAxisTransform(
+  //   V7RC_ICM20948_AXIS_X,  1,
+  //   V7RC_ICM20948_AXIS_Y, -1,
+  //   V7RC_ICM20948_AXIS_Z, -1
+  // );
 
   V7RCDroneImu* imu = selectedImu();
   const bool imuReady = runtime.begin(options, imu);

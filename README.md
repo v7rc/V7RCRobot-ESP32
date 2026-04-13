@@ -177,6 +177,7 @@ ARDUINO_LINT=arduino-lint ./scripts/lint-library.sh
 發版前建議檢查：
 
 - [docs/RELEASE_CHECKLIST.md](/Users/louischuang/Documents/Arduino/libraries/V7RCRobot-ESP32/docs/RELEASE_CHECKLIST.md)
+- [docs/DRONE_SANITY_CHECKLIST.md](/Users/louischuang/Documents/Arduino/libraries/V7RCRobot-ESP32/docs/DRONE_SANITY_CHECKLIST.md)
 - [CHANGELOG.md](/Users/louischuang/Documents/Arduino/libraries/V7RCRobot-ESP32/CHANGELOG.md)
 
 ## Next Steps

@@ -35,6 +35,12 @@ V7RCIcm20948Imu::V7RCIcm20948Imu(uint8_t sdaPin, uint8_t sclPin, uint8_t i2cAddr
     currentBank_(0xFF),
     begun_(false),
     lastUpdateMs_(0),
+    logicalXSource_(V7RC_ICM20948_AXIS_X),
+    logicalYSource_(V7RC_ICM20948_AXIS_Y),
+    logicalZSource_(V7RC_ICM20948_AXIS_Z),
+    logicalXSign_(1),
+    logicalYSign_(1),
+    logicalZSign_(1),
     accelXg_(0.0f),
     accelYg_(0.0f),
     accelZg_(0.0f),
@@ -45,6 +51,17 @@ V7RCIcm20948Imu::V7RCIcm20948Imu(uint8_t sdaPin, uint8_t sclPin, uint8_t i2cAddr
   attitude_.pitchDeg = 0.0f;
   attitude_.yawRateDegPerSec = 0.0f;
   attitude_.valid = false;
+}
+
+float V7RCIcm20948Imu::axisValue(float rawX, float rawY, float rawZ, V7RCIcm20948Axis axis, int8_t sign) const {
+  float value = rawX;
+  if (axis == V7RC_ICM20948_AXIS_Y) {
+    value = rawY;
+  } else if (axis == V7RC_ICM20948_AXIS_Z) {
+    value = rawZ;
+  }
+
+  return sign >= 0 ? value : -value;
 }
 
 bool V7RCIcm20948Imu::selectBank(uint8_t bank) {
@@ -171,12 +188,19 @@ bool V7RCIcm20948Imu::update(unsigned long nowMs) {
   }
   lastUpdateMs_ = nowMs;
 
-  accelXg_ = (float)ax / kAccelScale;
-  accelYg_ = (float)ay / kAccelScale;
-  accelZg_ = (float)az / kAccelScale;
-  gyroXDegPerSec_ = (float)gx / kGyroScale;
-  gyroYDegPerSec_ = (float)gy / kGyroScale;
-  gyroZDegPerSec_ = (float)gz / kGyroScale;
+  const float rawAccelXg = (float)ax / kAccelScale;
+  const float rawAccelYg = (float)ay / kAccelScale;
+  const float rawAccelZg = (float)az / kAccelScale;
+  const float rawGyroXDegPerSec = (float)gx / kGyroScale;
+  const float rawGyroYDegPerSec = (float)gy / kGyroScale;
+  const float rawGyroZDegPerSec = (float)gz / kGyroScale;
+
+  accelXg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalXSource_, logicalXSign_);
+  accelYg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalYSource_, logicalYSign_);
+  accelZg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalZSource_, logicalZSign_);
+  gyroXDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_);
+  gyroYDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_);
+  gyroZDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_);
 
   const float accelRoll = atan2f(accelYg_, accelZg_) * 180.0f / PI;
   const float accelPitch = atan2f(-accelXg_, sqrtf(accelYg_ * accelYg_ + accelZg_ * accelZg_)) * 180.0f / PI;
@@ -225,4 +249,20 @@ float V7RCIcm20948Imu::gyroYDegPerSec() const {
 
 float V7RCIcm20948Imu::gyroZDegPerSec() const {
   return gyroZDegPerSec_;
+}
+
+void V7RCIcm20948Imu::setAxisTransform(
+  V7RCIcm20948Axis logicalXSource,
+  int8_t logicalXSign,
+  V7RCIcm20948Axis logicalYSource,
+  int8_t logicalYSign,
+  V7RCIcm20948Axis logicalZSource,
+  int8_t logicalZSign
+) {
+  logicalXSource_ = logicalXSource;
+  logicalYSource_ = logicalYSource;
+  logicalZSource_ = logicalZSource;
+  logicalXSign_ = logicalXSign >= 0 ? 1 : -1;
+  logicalYSign_ = logicalYSign >= 0 ? 1 : -1;
+  logicalZSign_ = logicalZSign >= 0 ? 1 : -1;
 }

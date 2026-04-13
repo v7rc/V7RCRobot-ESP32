@@ -21,6 +21,8 @@ Languages: `繁中` | [English](README.en.md) | [简中](README.zh-CN.md) | [日
   - 提供 car module 的較乾淨入口與 facade
 - `V7RCDrone-esp32.h`
   - 提供 drone runtime、IMU abstraction 與 MPU6050 實作
+- `V7RCDroneV2-esp32.h`
+  - 提供新的 DroneV2 dual-loop runtime 與 legacy IMU adapter
 - `V7RCQuadruped-esp32.h`
   - 提供 quadruped runtime 與 dog demo 所需型別
 - `V7RCOtto-esp32.h`
@@ -69,6 +71,12 @@ legacy driver 仍是目前主要 runtime 基底：
 #include <V7RCDrone-esp32.h>
 ```
 
+如果你要開始整理新的 drone 控制演算法，則可使用：
+
+```cpp
+#include <V7RCDroneV2-esp32.h>
+```
+
 如果你要直接使用 quadruped runtime，則可使用：
 
 ```cpp
@@ -106,6 +114,9 @@ legacy driver 仍是目前主要 runtime 基底：
 - drone runtime example
   - `ESP32_C3_ADXL345_Integration_Check`
   - `ESP32_C3_Drone_Runtime_Demo`
+  - `ESP32_C3_Drone_V2_Runtime_Demo`
+  - `ESP32_C3_Drone_V2_Simulate`
+  - `ESP32_C3_Drone_V2_BLE_Control_Simulate`
   - `ESP32_C3_Drone_V7RC_BLE_Control`
 - quadruped runtime example
   - `ESP32_C3_Dog_Runtime_Demo`
@@ -121,6 +132,9 @@ legacy driver 仍是目前主要 runtime 基底：
 目前 `ESP32_C3_Mecanum_V7RC_BLE_Control` 預設使用 `ch0=Vx`、`ch1=Vy`、`ch3=Omega`、`ch2=Servo(GPIO7)`、`ch5=Servo(GPIO6)`，也可在 sketch 內直接調整 channel mapping。
 如果你要用 V7RC App 透過 BLE 控制 tank，請用 `ESP32_C3_Tank_V7RC_BLE_Control`。
 如果你要試 drone runtime，可從 `ESP32_C3_Drone_Runtime_Demo` 開始。
+如果你要試新的 dual-loop DroneV2，可從 `ESP32_C3_Drone_V2_Runtime_Demo` 開始。
+如果你要把虛擬世界的 IMU 經由 Serial 餵進來做閉環模擬，可用 `ESP32_C3_Drone_V2_Simulate`。
+如果你要改成由 V7RC App 經 BLE 實際控制、但 IMU 仍由 Serial 虛擬輸入，可用 `ESP32_C3_Drone_V2_BLE_Control_Simulate`。
 如果你要先單獨驗證 `ADXL345 + I2C(GPIO5/GPIO6)` 整合，可用 `ESP32_C3_ADXL345_Integration_Check`。
 如果你要用 V7RC App 透過 BLE 控制 drone，可用 `ESP32_C3_Drone_V7RC_BLE_Control`。
 目前 `ESP32_C3_Drone_V7RC_BLE_Control` 可在 sketch 頂部切換 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，預設為 `ICM20948`。

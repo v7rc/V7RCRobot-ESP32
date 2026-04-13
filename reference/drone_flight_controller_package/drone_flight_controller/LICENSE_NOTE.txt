@@ -1,0 +1,3 @@
+This package is a generated starter skeleton intended for integration into the user's own firmware project.
+Review, test, and adapt all control logic before real flight use.
+Always verify motor direction, mixer polarity, and emergency stop behavior without propellers first.

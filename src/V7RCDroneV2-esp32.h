@@ -1,0 +1,16 @@
+#pragma once
+
+#include "V7RCRobot-esp32.h"
+#include "vehicle/drone/V7RCAdxl345Imu.h"
+#include "vehicle/drone/V7RCDroneImu.h"
+#include "vehicle/drone/V7RCIcm20948Imu.h"
+#include "vehicle/drone/V7RCMpu6050Imu.h"
+#include "vehicle/drone/v2/V7RCDroneV2AngleController.h"
+#include "vehicle/drone/v2/V7RCDroneV2Estimator.h"
+#include "vehicle/drone/v2/V7RCDroneV2LegacyImuAdapter.h"
+#include "vehicle/drone/v2/V7RCDroneV2MotorMixer.h"
+#include "vehicle/drone/v2/V7RCDroneV2Pid.h"
+#include "vehicle/drone/v2/V7RCDroneV2RateController.h"
+#include "vehicle/drone/v2/V7RCDroneV2Runtime.h"
+#include "vehicle/drone/v2/V7RCDroneV2SimulatedIcm20948.h"
+#include "vehicle/drone/v2/V7RCDroneV2Types.h"

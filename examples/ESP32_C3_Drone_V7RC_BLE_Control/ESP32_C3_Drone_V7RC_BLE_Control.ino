@@ -52,7 +52,6 @@ V7RCDroneRuntimeOptions options = {
   .pitchKp = 0.85f,
   .yawGain = 0.35f,
   .yawRateKp = 0.012f,
-  .maxYawRateDegPerSec = 45.0f,
   .escMinUs = 1000,
   .escMaxUs = 2000,
   .escIdleUs = 1080,
@@ -107,7 +106,7 @@ float normalizeYaw(V7RC_ProtocolType protocolType, int16_t rawValue) {
     }
   }
 
-  return clampUnit(-normalizeBidirectional(protocolType, rawValue) * kYawInputScale);
+  return clampUnit(normalizeBidirectional(protocolType, rawValue) * kYawInputScale);
 }
 
 float normalizeThrottle(V7RC_ProtocolType protocolType, int16_t rawValue) {
@@ -301,8 +300,8 @@ void setup() {
     kImuSclPin
   );
   Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
-  Serial.println("V7RC App channels: ch0=Yaw(rate target), ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
-  Serial.printf("Yaw deadzone: %d-%d, yaw input scale: %.2f, max yaw rate: %.1f dps\n", kYawDeadzoneMin, kYawDeadzoneMax, kYawInputScale, options.maxYawRateDegPerSec);
+  Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
+  Serial.printf("Yaw deadzone: %d-%d, yaw input scale: %.2f\n", kYawDeadzoneMin, kYawDeadzoneMax, kYawInputScale);
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
   Serial.println("ICM20948 gyro bias calibration now runs after the unlock gesture is received.");
   Serial.println("BLE debug telemetry: CMD + THR + YAW + YRT + PIT + #");

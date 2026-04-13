@@ -46,10 +46,7 @@ V7RCIcm20948Imu::V7RCIcm20948Imu(uint8_t sdaPin, uint8_t sclPin, uint8_t i2cAddr
     accelZg_(0.0f),
     gyroXDegPerSec_(0.0f),
     gyroYDegPerSec_(0.0f),
-    gyroZDegPerSec_(0.0f),
-    gyroBiasXDegPerSec_(0.0f),
-    gyroBiasYDegPerSec_(0.0f),
-    gyroBiasZDegPerSec_(0.0f) {
+    gyroZDegPerSec_(0.0f) {
   attitude_.rollDeg = 0.0f;
   attitude_.pitchDeg = 0.0f;
   attitude_.yawRateDegPerSec = 0.0f;
@@ -157,40 +154,6 @@ bool V7RCIcm20948Imu::begin() {
   return true;
 }
 
-bool V7RCIcm20948Imu::calibrateGyroBias(uint16_t samples, uint16_t sampleDelayMs) {
-  if (!begun_ || samples == 0) {
-    return false;
-  }
-
-  float sumGx = 0.0f;
-  float sumGy = 0.0f;
-  float sumGz = 0.0f;
-
-  for (uint16_t i = 0; i < samples; ++i) {
-    int16_t ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
-    if (!readRaw(&ax, &ay, &az, &gx, &gy, &gz)) {
-      return false;
-    }
-
-    const float rawGyroXDegPerSec = (float)gx / kGyroScale;
-    const float rawGyroYDegPerSec = (float)gy / kGyroScale;
-    const float rawGyroZDegPerSec = (float)gz / kGyroScale;
-
-    sumGx += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_);
-    sumGy += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_);
-    sumGz += axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_);
-
-    delay(sampleDelayMs);
-  }
-
-  gyroBiasXDegPerSec_ = sumGx / (float)samples;
-  gyroBiasYDegPerSec_ = sumGy / (float)samples;
-  gyroBiasZDegPerSec_ = sumGz / (float)samples;
-  lastUpdateMs_ = 0;
-  attitude_.valid = false;
-  return true;
-}
-
 bool V7RCIcm20948Imu::readRaw(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
   if (!selectBank(kBank0)) {
     return false;
@@ -235,9 +198,9 @@ bool V7RCIcm20948Imu::update(unsigned long nowMs) {
   accelXg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalXSource_, logicalXSign_);
   accelYg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalYSource_, logicalYSign_);
   accelZg_ = axisValue(rawAccelXg, rawAccelYg, rawAccelZg, logicalZSource_, logicalZSign_);
-  gyroXDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_) - gyroBiasXDegPerSec_;
-  gyroYDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_) - gyroBiasYDegPerSec_;
-  gyroZDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_) - gyroBiasZDegPerSec_;
+  gyroXDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalXSource_, logicalXSign_);
+  gyroYDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalYSource_, logicalYSign_);
+  gyroZDegPerSec_ = axisValue(rawGyroXDegPerSec, rawGyroYDegPerSec, rawGyroZDegPerSec, logicalZSource_, logicalZSign_);
 
   const float accelRoll = atan2f(accelYg_, accelZg_) * 180.0f / PI;
   const float accelPitch = atan2f(-accelXg_, sqrtf(accelYg_ * accelYg_ + accelZg_ * accelZg_)) * 180.0f / PI;

@@ -23,7 +23,6 @@ public:
   float gyroXDegPerSec() const;
   float gyroYDegPerSec() const;
   float gyroZDegPerSec() const;
-  bool calibrateGyroBias(uint16_t samples = 400, uint16_t sampleDelayMs = 2);
   void setAxisTransform(
     V7RCIcm20948Axis logicalXSource,
     int8_t logicalXSign,
@@ -58,8 +57,5 @@ private:
   float gyroXDegPerSec_;
   float gyroYDegPerSec_;
   float gyroZDegPerSec_;
-  float gyroBiasXDegPerSec_;
-  float gyroBiasYDegPerSec_;
-  float gyroBiasZDegPerSec_;
   V7RCDroneAttitude attitude_;
 };

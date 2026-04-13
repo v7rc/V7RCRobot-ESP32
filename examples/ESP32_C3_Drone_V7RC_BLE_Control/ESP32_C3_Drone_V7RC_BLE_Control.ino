@@ -31,6 +31,8 @@ V7RC_DCMotorConfig motors[] = {
 V7RCDroneControlState controlState = {0.0f, 0.0f, 0.0f, 0.0f};
 bool stabilizationEnabled = false;
 bool controlUnlocked = false;
+bool imuReady = false;
+bool gyroCalibrationOk = true;
 
 char frameBuffer[48];
 size_t frameLength = 0;
@@ -120,6 +122,15 @@ void applyFrame(const V7RC_Frame& frame) {
   if (!frame.valid || frame.type == V7RC_LED) return;
 
   if (!controlUnlocked && isUnlockGesture(frame)) {
+    if (kImuSelection == V7RC_DRONE_IMU_ICM20948 && imuReady) {
+      Serial.println("Unlock gesture accepted. Calibrating ICM20948 gyro bias; keep the drone still...");
+      gyroCalibrationOk = icm20948Imu.calibrateGyroBias(400, 2);
+      if (!gyroCalibrationOk) {
+        Serial.println("ICM20948 gyro calibration failed. Drone remains locked.");
+        return;
+      }
+    }
+
     controlUnlocked = true;
     runtime.beginUnlock();
     Serial.println("Unlock gesture accepted. Entering standby; keep throttle low briefly, then control is enabled.");
@@ -176,6 +187,7 @@ void handleConnectionChanged(bool connected, void* context) {
   if (!connected) {
     controlState = {0.0f, 0.0f, 0.0f, 0.0f};
     controlUnlocked = false;
+    gyroCalibrationOk = true;
     runtime.disarm();
     Serial.println("BLE disconnected. Drone locked.");
     return;
@@ -217,7 +229,8 @@ void setup() {
   );
 
   V7RCDroneImu* imu = selectedImu();
-  const bool imuReady = runtime.begin(options, imu);
+  imuReady = runtime.begin(options, imu);
+
   runtime.setStabilizationEnabled(stabilizationEnabled);
 
   char deviceName[20];
@@ -229,13 +242,14 @@ void setup() {
 
   Serial.printf(
     "Drone BLE control ready (DC motor mode, IMU=%s, SDA=%u, SCL=%u, locked on boot).\n",
-    imu ? (imuReady ? imu->sensorName() : "OFFLINE") : "DISABLED",
+    imu ? (imuReady ? (gyroCalibrationOk ? imu->sensorName() : "CALIBRATION_FAILED") : "OFFLINE") : "DISABLED",
     kImuSdaPin,
     kImuSclPin
   );
   Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
   Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
+  Serial.println("ICM20948 gyro bias calibration now runs after the unlock gesture is received.");
 }
 
 void loop() {

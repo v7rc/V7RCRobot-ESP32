@@ -15,6 +15,9 @@ enum V7RCDroneImuSelection : uint8_t {
 static const uint8_t kImuSdaPin = 5;
 static const uint8_t kImuSclPin = 6;
 static const V7RCDroneImuSelection kImuSelection = V7RC_DRONE_IMU_ICM20948;
+static const int16_t kYawDeadzoneMin = 1400;
+static const int16_t kYawDeadzoneMax = 1600;
+static const float kYawInputScale = 0.25f;
 
 V7RCDroneRuntime runtime;
 V7RCAdxl345Imu adxl345Imu(kImuSdaPin, kImuSclPin);
@@ -48,6 +51,7 @@ V7RCDroneRuntimeOptions options = {
   .rollKp = 0.85f,
   .pitchKp = 0.85f,
   .yawGain = 0.35f,
+  .yawRateKp = 0.012f,
   .escMinUs = 1000,
   .escMaxUs = 2000,
   .escIdleUs = 1080,
@@ -93,6 +97,16 @@ float normalizeBidirectional(V7RC_ProtocolType protocolType, int16_t rawValue) {
   }
 
   return clampUnit(normalized);
+}
+
+float normalizeYaw(V7RC_ProtocolType protocolType, int16_t rawValue) {
+  if (protocolType == V7RC_HEX || protocolType == V7RC_SRV || protocolType == V7RC_SS8) {
+    if (rawValue >= kYawDeadzoneMin && rawValue <= kYawDeadzoneMax) {
+      return 0.0f;
+    }
+  }
+
+  return clampUnit(normalizeBidirectional(protocolType, rawValue) * kYawInputScale);
 }
 
 float normalizeThrottle(V7RC_ProtocolType protocolType, int16_t rawValue) {
@@ -181,7 +195,7 @@ void applyFrame(const V7RC_Frame& frame) {
   }
 
   if (frame.channelPresent[0]) {
-    controlState.yaw = normalizeBidirectional(frame.type, frame.values[0]);
+    controlState.yaw = normalizeYaw(frame.type, frame.values[0]);
   }
   if (frame.channelPresent[1]) {
     controlState.throttle = normalizeThrottle(frame.type, frame.values[1]);
@@ -287,6 +301,7 @@ void setup() {
   );
   Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
   Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
+  Serial.printf("Yaw deadzone: %d-%d, yaw input scale: %.2f\n", kYawDeadzoneMin, kYawDeadzoneMax, kYawInputScale);
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
   Serial.println("ICM20948 gyro bias calibration now runs after the unlock gesture is received.");
   Serial.println("BLE debug telemetry: CMD + THR + YAW + YRT + PIT + #");

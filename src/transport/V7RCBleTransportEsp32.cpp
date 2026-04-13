@@ -36,6 +36,8 @@ public:
       NimBLEUUID(kTxUuid),
       NIMBLE_PROPERTY::NOTIFY
     );
+    txCallbacks_ = new TxCharacteristicCallbacks(*this);
+    txCharacteristic_->setCallbacks(txCallbacks_);
 
     service->start();
 
@@ -47,13 +49,11 @@ public:
   }
 
   size_t send(const uint8_t* data, size_t length) {
-    if (!connected_ || !txCharacteristic_ || !data || length == 0) {
+    if (!connected_ || !txCharacteristic_ || !data || length == 0 || !txSubscribed_) {
       return 0;
     }
 
-    txCharacteristic_->setValue(data, length);
-    txCharacteristic_->notify();
-    return length;
+    return txCharacteristic_->notify(data, length) ? length : 0;
   }
 
   bool isConnected() const {
@@ -102,13 +102,29 @@ private:
     Impl& impl_;
   };
 
+  class TxCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
+  public:
+    explicit TxCharacteristicCallbacks(Impl& impl) : impl_(impl) {}
+
+    void onSubscribe(NimBLECharacteristic* characteristic, NimBLEConnInfo& connInfo, uint16_t subValue) override {
+      (void)characteristic;
+      (void)connInfo;
+      impl_.txSubscribed_ = (subValue != 0);
+    }
+
+  private:
+    Impl& impl_;
+  };
+
   V7RCBleTransportEsp32& owner_;
   NimBLEServer* server_ = nullptr;
   NimBLECharacteristic* rxCharacteristic_ = nullptr;
   NimBLECharacteristic* txCharacteristic_ = nullptr;
   ServerCallbacks* serverCallbacks_ = nullptr;
   CharacteristicCallbacks* characteristicCallbacks_ = nullptr;
+  TxCharacteristicCallbacks* txCallbacks_ = nullptr;
   bool connected_ = false;
+  bool txSubscribed_ = false;
 };
 
 V7RCBleTransportEsp32::V7RCBleTransportEsp32() : impl_(new Impl(*this)) {}

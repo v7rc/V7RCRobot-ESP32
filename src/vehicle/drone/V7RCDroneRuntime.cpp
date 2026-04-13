@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "V7RCDroneRuntime.h"
 
 namespace {
@@ -16,7 +17,8 @@ V7RCDroneRuntime::V7RCDroneRuntime()
     armed_(false),
     unlockPending_(false),
     stabilizationEnabled_(false),
-    unlockStartMs_(0) {
+    unlockStartMs_(0),
+    filteredYawRateDegPerSec_(0.0f) {
   lastAttitude_.rollDeg = 0.0f;
   lastAttitude_.pitchDeg = 0.0f;
   lastAttitude_.yawRateDegPerSec = 0.0f;
@@ -50,6 +52,7 @@ bool V7RCDroneRuntime::begin(const V7RCDroneRuntimeOptions& options, V7RCDroneIm
   unlockPending_ = false;
   unlockStartMs_ = 0;
   lastAttitude_.valid = false;
+  filteredYawRateDegPerSec_ = 0.0f;
 
   if (!imu_) {
     return true;
@@ -69,6 +72,8 @@ bool V7RCDroneRuntime::canFinishUnlock(const V7RCDroneControlState& controlState
 }
 
 V7RCDroneMotorMix V7RCDroneRuntime::mixOutputs(const V7RCDroneControlState& controlState, const V7RCDroneAttitude& attitude) const {
+  const float base = clampUnit(controlState.throttle);
+  const float compensationScale = base;
   const float desiredRollDeg = clampUnit(controlState.roll) * options_.maxTiltDeg;
   const float desiredPitchDeg = clampUnit(controlState.pitch) * options_.maxTiltDeg;
 
@@ -82,8 +87,20 @@ V7RCDroneMotorMix V7RCDroneRuntime::mixOutputs(const V7RCDroneControlState& cont
     pitchCorrection = desiredPitchDeg / options_.maxTiltDeg;
   }
 
-  const float yawComponent = clampUnit(controlState.yaw) * options_.yawGain;
-  const float base = clampUnit(controlState.throttle);
+  rollCorrection *= compensationScale;
+  pitchCorrection *= compensationScale;
+
+  float yawComponent = clampUnit(controlState.yaw) * options_.yawGain;
+  if (attitude.valid) {
+    float dampedYawRate = filteredYawRateDegPerSec_;
+    if (fabsf(dampedYawRate) < options_.yawRateDeadbandDegPerSec) {
+      dampedYawRate = 0.0f;
+    }
+
+    yawComponent += dampedYawRate * options_.yawRateDampingKp;
+    yawComponent = clampUnit(yawComponent);
+  }
+  yawComponent *= compensationScale;
 
   V7RCDroneMotorMix mix;
   mix.frontLeft = base + pitchCorrection + rollCorrection - yawComponent;
@@ -120,6 +137,15 @@ void V7RCDroneRuntime::update(const V7RCDroneControlState& controlState, unsigne
   if (imu_) {
     imu_->update(nowMs);
     lastAttitude_ = imu_->attitude();
+    if (lastAttitude_.valid) {
+      const float alpha = constrain(options_.yawRateFilterAlpha, 0.0f, 1.0f);
+      filteredYawRateDegPerSec_ =
+        filteredYawRateDegPerSec_ + alpha * (lastAttitude_.yawRateDegPerSec - filteredYawRateDegPerSec_);
+    } else {
+      filteredYawRateDegPerSec_ = 0.0f;
+    }
+  } else {
+    filteredYawRateDegPerSec_ = 0.0f;
   }
 
   if (unlockPending_) {
@@ -174,6 +200,7 @@ void V7RCDroneRuntime::disarm() {
   armed_ = false;
   unlockPending_ = false;
   unlockStartMs_ = 0;
+  filteredYawRateDegPerSec_ = 0.0f;
   for (uint8_t i = 0; i < 4; ++i) {
     if (options_.outputMode == V7RC_DRONE_OUTPUT_DC_MOTOR) {
       dcMotorOutputs_[i].stop();

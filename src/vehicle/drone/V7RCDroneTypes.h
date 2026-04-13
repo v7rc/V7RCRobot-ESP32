@@ -39,6 +39,9 @@ struct V7RCDroneRuntimeOptions {
   float rollKp;
   float pitchKp;
   float yawGain;
+  float yawRateDampingKp;
+  float yawRateDeadbandDegPerSec;
+  float yawRateFilterAlpha;
   uint16_t escMinUs;
   uint16_t escMaxUs;
   uint16_t escIdleUs;

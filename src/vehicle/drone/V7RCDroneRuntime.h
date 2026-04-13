@@ -34,4 +34,5 @@ private:
   bool stabilizationEnabled_;
   unsigned long unlockStartMs_;
   V7RCDroneAttitude lastAttitude_;
+  float filteredYawRateDegPerSec_;
 };

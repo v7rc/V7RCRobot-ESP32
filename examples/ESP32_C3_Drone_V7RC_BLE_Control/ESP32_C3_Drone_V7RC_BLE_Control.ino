@@ -46,6 +46,9 @@ V7RCDroneRuntimeOptions options = {
   .rollKp = 0.85f,
   .pitchKp = 0.85f,
   .yawGain = 0.35f,
+  .yawRateDampingKp = 0.006f,
+  .yawRateDeadbandDegPerSec = 8.0f,
+  .yawRateFilterAlpha = 0.12f,
   .escMinUs = 1000,
   .escMaxUs = 2000,
   .escIdleUs = 1080,
@@ -250,7 +253,7 @@ void setup() {
   // If the tilt directions are still reversed after this change,
   // keep the axis order and only flip the sign of X or Y.
   icm20948Imu.setAxisTransform(
-    V7RC_ICM20948_AXIS_Y,  1,
+    V7RC_ICM20948_AXIS_Y,  -1,
     V7RC_ICM20948_AXIS_X,  1,
     V7RC_ICM20948_AXIS_Z,  1
   );

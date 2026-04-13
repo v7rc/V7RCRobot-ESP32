@@ -22,10 +22,10 @@ V7RCIcm20948Imu icm20948Imu(kImuSdaPin, kImuSclPin);
 V7RCBleTransportEsp32 transport;
 
 V7RC_DCMotorConfig motors[] = {
-  {21, 20, false},  // front-left
-  {10, 0, true},    // front-right
-  {1, 2, true},     // rear-left
-  {4, 3, false},    // rear-right
+  {20, 21, false},  // front-left
+  {0, 10, true},    // front-right
+  {2, 1, true},     // rear-left
+  {3, 4, false},    // rear-right
 };
 
 V7RCDroneControlState controlState = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -203,34 +203,18 @@ void setup() {
   //   V7RC_ADXL345_AXIS_Z,  1
   // );
   //
-  // If you use ICM20948 and the mounting direction differs from the airframe logic,
-  // adjust the axis transform here.
+  // Active ICM20948 mounting compensation for this airframe:
+  // logical X = sensor Y
+  // logical Y = sensor X
+  // logical Z = sensor Z
   //
-  // Default logical frame:
-  //   X = sensor X
-  //   Y = sensor Y
-  //   Z = sensor Z
-  //
-  // Example A: module rotated 90 degrees clockwise when viewed from above
-  // icm20948Imu.setAxisTransform(
-  //   V7RC_ICM20948_AXIS_Y,  1,
-  //   V7RC_ICM20948_AXIS_X, -1,
-  //   V7RC_ICM20948_AXIS_Z,  1
-  // );
-  //
-  // Example B: module rotated 90 degrees counter-clockwise when viewed from above
-  // icm20948Imu.setAxisTransform(
-  //   V7RC_ICM20948_AXIS_Y, -1,
-  //   V7RC_ICM20948_AXIS_X,  1,
-  //   V7RC_ICM20948_AXIS_Z,  1
-  // );
-  //
-  // Example C: module mounted upside down
-  // icm20948Imu.setAxisTransform(
-  //   V7RC_ICM20948_AXIS_X,  1,
-  //   V7RC_ICM20948_AXIS_Y, -1,
-  //   V7RC_ICM20948_AXIS_Z, -1
-  // );
+  // If the tilt directions are still reversed after this change,
+  // keep the axis order and only flip the sign of X or Y.
+  icm20948Imu.setAxisTransform(
+    V7RC_ICM20948_AXIS_Y,  1,
+    V7RC_ICM20948_AXIS_X,  1,
+    V7RC_ICM20948_AXIS_Z,  1
+  );
 
   V7RCDroneImu* imu = selectedImu();
   const bool imuReady = runtime.begin(options, imu);

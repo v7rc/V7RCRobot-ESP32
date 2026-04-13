@@ -7,6 +7,7 @@
 #include "vehicle/drone/V7RCMpu6050Imu.h"
 #include "vehicle/drone/v2/V7RCDroneV2AngleController.h"
 #include "vehicle/drone/v2/V7RCDroneV2Estimator.h"
+#include "vehicle/drone/v2/V7RCDroneV2Icm20948Estimator.h"
 #include "vehicle/drone/v2/V7RCDroneV2LegacyImuAdapter.h"
 #include "vehicle/drone/v2/V7RCDroneV2MotorMixer.h"
 #include "vehicle/drone/v2/V7RCDroneV2Pid.h"

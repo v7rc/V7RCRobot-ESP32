@@ -34,6 +34,7 @@
 - runtime：`src/vehicle/drone/v2/V7RCDroneV2Runtime.*`
 - 設計文件：`vehicle/drone/DRONE_V2_DESIGN.md`
 - simulate protocol：`vehicle/drone/DRONE_V2_SIM_PROTOCOL.md`
+- real BLE control demo：`examples/ESP32_C3_Drone_V2_BLE_Control`
 - demo：`examples/ESP32_C3_Drone_V2_Runtime_Demo`
 - simulate demo：`examples/ESP32_C3_Drone_V2_Simulate`
 - BLE simulate demo：`examples/ESP32_C3_Drone_V2_BLE_Control_Simulate`

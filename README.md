@@ -114,6 +114,7 @@ legacy driver 仍是目前主要 runtime 基底：
 - drone runtime example
   - `ESP32_C3_ADXL345_Integration_Check`
   - `ESP32_C3_Drone_Runtime_Demo`
+  - `ESP32_C3_Drone_V2_BLE_Control`
   - `ESP32_C3_Drone_V2_Runtime_Demo`
   - `ESP32_C3_Drone_V2_Simulate`
   - `ESP32_C3_Drone_V2_BLE_Control_Simulate`
@@ -132,6 +133,7 @@ legacy driver 仍是目前主要 runtime 基底：
 目前 `ESP32_C3_Mecanum_V7RC_BLE_Control` 預設使用 `ch0=Vx`、`ch1=Vy`、`ch3=Omega`、`ch2=Servo(GPIO7)`、`ch5=Servo(GPIO6)`，也可在 sketch 內直接調整 channel mapping。
 如果你要用 V7RC App 透過 BLE 控制 tank，請用 `ESP32_C3_Tank_V7RC_BLE_Control`。
 如果你要試 drone runtime，可從 `ESP32_C3_Drone_Runtime_Demo` 開始。
+如果你要用真的 `ICM20948` 搭配 V7RC App 經 BLE 控制 `DroneV2`，可用 `ESP32_C3_Drone_V2_BLE_Control`。
 如果你要試新的 dual-loop DroneV2，可從 `ESP32_C3_Drone_V2_Runtime_Demo` 開始。
 如果你要把虛擬世界的 IMU 經由 Serial 餵進來做閉環模擬，可用 `ESP32_C3_Drone_V2_Simulate`。
 如果你要改成由 V7RC App 經 BLE 實際控制、但 IMU 仍由 Serial 虛擬輸入，可用 `ESP32_C3_Drone_V2_BLE_Control_Simulate`。

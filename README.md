@@ -104,6 +104,7 @@ legacy driver 仍是目前主要 runtime 基底：
   - `ESP32_C3_Tank_V7RC_BLE_Control`
   - `ESP32_C3_Tank_Runtime_Demo`
 - drone runtime example
+  - `ESP32_C3_ADXL345_Integration_Check`
   - `ESP32_C3_Drone_Runtime_Demo`
   - `ESP32_C3_Drone_V7RC_BLE_Control`
 - quadruped runtime example
@@ -120,7 +121,9 @@ legacy driver 仍是目前主要 runtime 基底：
 目前 `ESP32_C3_Mecanum_V7RC_BLE_Control` 預設使用 `ch0=Vx`、`ch1=Vy`、`ch3=Omega`、`ch2=Servo(GPIO7)`、`ch5=Servo(GPIO6)`，也可在 sketch 內直接調整 channel mapping。
 如果你要用 V7RC App 透過 BLE 控制 tank，請用 `ESP32_C3_Tank_V7RC_BLE_Control`。
 如果你要試 drone runtime，可從 `ESP32_C3_Drone_Runtime_Demo` 開始。
+如果你要先單獨驗證 `ADXL345 + I2C(GPIO5/GPIO6)` 整合，可用 `ESP32_C3_ADXL345_Integration_Check`。
 如果你要用 V7RC App 透過 BLE 控制 drone，可用 `ESP32_C3_Drone_V7RC_BLE_Control`。
+目前 `ESP32_C3_Drone_V7RC_BLE_Control` 可在 sketch 頂部切換 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，預設為 `ICM20948`。
 如果你要試 quadruped runtime，可從 `ESP32_C3_Dog_Runtime_Demo` 開始。
 如果你要試 OTTO runtime，可從 `ESP32_C3_OTTO_Runtime_Demo` 開始。
 如果你要試 robot arm runtime，可從 `ESP32_C3_RobotARM_Runtime_Demo` 開始。

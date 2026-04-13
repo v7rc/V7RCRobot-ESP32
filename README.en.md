@@ -91,6 +91,7 @@ Suggested starting points:
 - BLE mecanum control via V7RC App: `ESP32_C3_Mecanum_V7RC_BLE_Control`
 - BLE tank control via V7RC App: `ESP32_C3_Tank_V7RC_BLE_Control`
 - BLE drone control via V7RC App: `ESP32_C3_Drone_V7RC_BLE_Control`
+- `ESP32_C3_Drone_V7RC_BLE_Control` lets you switch the IMU at the top of the sketch between `V7RC_DRONE_IMU_NONE`, `V7RC_DRONE_IMU_ADXL345`, and `V7RC_DRONE_IMU_ICM20948`. The current default is `ICM20948`.
 
 ## Project Layout
 

@@ -91,6 +91,7 @@ drone examples：
 - V7RC App から BLE で mecanum を操作: `ESP32_C3_Mecanum_V7RC_BLE_Control`
 - V7RC App から BLE で tank を操作: `ESP32_C3_Tank_V7RC_BLE_Control`
 - V7RC App から BLE で drone を操作: `ESP32_C3_Drone_V7RC_BLE_Control`
+- `ESP32_C3_Drone_V7RC_BLE_Control` では sketch 冒頭で `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948` を切り替えできます。現在の既定値は `ICM20948` です。
 
 ## プロジェクト構成
 

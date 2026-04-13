@@ -35,7 +35,7 @@ bool V7RCDroneRuntime::begin(const V7RCDroneRuntimeOptions& options, V7RCDroneIm
     }
 
     for (uint8_t i = 0; i < 4; ++i) {
-      dcMotorOutputs_[i].attach(options_.dcMotors[i].pinDir, options_.dcMotors[i].pinPwm);
+      dcMotorOutputs_[i].attach(options_.dcMotors[i].pinDir, options_.dcMotors[i].pinPwm, options_.dcMotors[i].dirInvert);
       dcMotorOutputs_[i].stop();
     }
   } else {

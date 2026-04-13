@@ -91,6 +91,7 @@ legacy 示例：
 - V7RC App 蓝牙麦克纳姆控制：`ESP32_C3_Mecanum_V7RC_BLE_Control`
 - V7RC App 蓝牙坦克控制：`ESP32_C3_Tank_V7RC_BLE_Control`
 - V7RC App 蓝牙无人机控制：`ESP32_C3_Drone_V7RC_BLE_Control`
+- `ESP32_C3_Drone_V7RC_BLE_Control` 可在 sketch 顶部切换 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，当前默认是 `ICM20948`
 
 ## 项目结构
 

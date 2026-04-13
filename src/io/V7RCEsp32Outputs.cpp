@@ -23,11 +23,12 @@ void V7RCEsp32ServoOutput::writeMicroseconds(uint16_t valueUs) {
   servo_.writeMicroseconds(valueUs);
 }
 
-V7RCEsp32DCMotorOutput::V7RCEsp32DCMotorOutput() : dirPin_(0), pwmPin_(0), attached_(false) {}
+V7RCEsp32DCMotorOutput::V7RCEsp32DCMotorOutput() : dirPin_(0), pwmPin_(0), dirInvert_(false), attached_(false) {}
 
-void V7RCEsp32DCMotorOutput::attach(uint8_t dirPin, uint8_t pwmPin) {
+void V7RCEsp32DCMotorOutput::attach(uint8_t dirPin, uint8_t pwmPin, bool dirInvert) {
   dirPin_ = dirPin;
   pwmPin_ = pwmPin;
+  dirInvert_ = dirInvert;
   pinMode(dirPin_, OUTPUT);
   pinMode(pwmPin_, OUTPUT);
   digitalWrite(dirPin_, LOW);
@@ -39,6 +40,9 @@ void V7RCEsp32DCMotorOutput::writeNormalized(float value) {
   if (!attached_) return;
 
   value = clampUnit(value);
+  if (dirInvert_) {
+    value = -value;
+  }
   const float deadband = 0.03f;
   if (value > -deadband && value < deadband) {
     stop();

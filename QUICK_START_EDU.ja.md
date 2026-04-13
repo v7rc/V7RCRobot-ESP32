@@ -47,6 +47,7 @@ legacy examples：
 注意：
 
 - `*_Runtime_Demo` はローカル runtime / mixer の確認向けです
+- `ESP32_C3_Drone_V7RC_BLE_Control` は sketch 冒頭で `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948` を切り替えでき、現在の既定値は `ICM20948` です
 - V7RC App で実際に操作したい場合は BLE control サンプルを使ってください
 
 ## 4) 配線の基本

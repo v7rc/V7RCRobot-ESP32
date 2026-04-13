@@ -47,6 +47,7 @@ legacy 示例：
 说明：
 
 - `*_Runtime_Demo` 更偏向本地 runtime / mixer 验证
+- `ESP32_C3_Drone_V7RC_BLE_Control` 支持在 sketch 顶部切换 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，当前默认是 `ICM20948`
 - 如果要真的让 V7RC App 控制，请优先使用 BLE control 示例
 
 ## 4) 接线基础

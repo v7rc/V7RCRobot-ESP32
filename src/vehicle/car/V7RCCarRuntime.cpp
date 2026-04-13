@@ -13,7 +13,7 @@ V7RCCarRuntime::V7RCCarRuntime()
 void V7RCCarRuntime::attachMotorOutputs(V7RC_DCMotorConfig* motors, uint8_t numMotors) {
   motorCount_ = numMotors > kMaxMotors ? kMaxMotors : numMotors;
   for (uint8_t i = 0; i < motorCount_; ++i) {
-    motorOutputs_[i].attach(motors[i].pinDir, motors[i].pinPwm);
+    motorOutputs_[i].attach(motors[i].pinDir, motors[i].pinPwm, motors[i].dirInvert);
   }
 }
 

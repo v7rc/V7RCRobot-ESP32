@@ -4,11 +4,12 @@
 namespace {
 
 V7RCDroneRuntime runtime;
+V7RCAdxl345Imu imu(5, 6);
 
 V7RC_DCMotorConfig motors[] = {
   {20, 21, false},  // front-left
-  {10, 0, false},   // front-right
-  {1, 2, false},    // rear-left
+  {10, 0, true},    // front-right
+  {1, 2, true},     // rear-left
   {3, 4, false},    // rear-right
 };
 
@@ -92,10 +93,24 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  runtime.begin(options, nullptr);
+  // Adjust this if the ADXL345 mounting orientation differs from the airframe logic.
+  // Example:
+  // imu.setAxisTransform(
+  //   V7RC_ADXL345_AXIS_Y,  1,
+  //   V7RC_ADXL345_AXIS_X, -1,
+  //   V7RC_ADXL345_AXIS_Z,  1
+  // );
+
+  const bool imuReady = runtime.begin(options, &imu);
   runtime.setStabilizationEnabled(stabilizationEnabled);
 
-  Serial.println("Drone runtime ready (DC motor mode, IMU disabled).");
+  Serial.printf(
+    "Drone runtime ready (DC motor mode, IMU=%s, SDA=%u, SCL=%u).\n",
+    imuReady ? imu.sensorName() : "OFFLINE",
+    5u,
+    6u
+  );
+  Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
   Serial.println("Commands: ARM, DISARM, STABILIZE ON, STABILIZE OFF, STATUS");
 }
 

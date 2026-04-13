@@ -47,6 +47,7 @@ Main public headers:
 Notes:
 
 - `*_Runtime_Demo` sketches are local runtime/mixer demos
+- `ESP32_C3_Drone_V7RC_BLE_Control` supports switching the IMU at the top of the sketch between `V7RC_DRONE_IMU_NONE`, `V7RC_DRONE_IMU_ADXL345`, and `V7RC_DRONE_IMU_ICM20948`. The current default is `ICM20948`.
 - BLE control examples are the right choice if you want real V7RC App control
 
 ## 4) Wiring Basics

@@ -12,7 +12,7 @@ public:
 class V7RCDCMotorOutput {
 public:
   virtual ~V7RCDCMotorOutput() {}
-  virtual void attach(uint8_t dirPin, uint8_t pwmPin) = 0;
+  virtual void attach(uint8_t dirPin, uint8_t pwmPin, bool dirInvert = false) = 0;
   virtual void writeNormalized(float value) = 0;
   virtual void stop() = 0;
 };

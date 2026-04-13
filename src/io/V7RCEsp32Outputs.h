@@ -21,13 +21,14 @@ class V7RCEsp32DCMotorOutput : public V7RCDCMotorOutput {
 public:
   V7RCEsp32DCMotorOutput();
 
-  void attach(uint8_t dirPin, uint8_t pwmPin) override;
+  void attach(uint8_t dirPin, uint8_t pwmPin, bool dirInvert = false) override;
   void writeNormalized(float value) override;
   void stop() override;
 
 private:
   uint8_t dirPin_;
   uint8_t pwmPin_;
+  bool dirInvert_;
   bool attached_;
 };
 

@@ -1,0 +1,228 @@
+#include "V7RCIcm20948Imu.h"
+
+#include <Wire.h>
+#include <math.h>
+
+namespace {
+
+static const uint8_t kRegBankSel = 0x7F;
+
+static const uint8_t kBank0 = 0x00;
+static const uint8_t kBank2 = 0x20;
+
+static const uint8_t kWhoAmIReg = 0x00;
+static const uint8_t kExpectedWhoAmI = 0xEA;
+static const uint8_t kPwrMgmt1Reg = 0x06;
+static const uint8_t kPwrMgmt2Reg = 0x07;
+static const uint8_t kAccelXoutHReg = 0x2D;
+
+static const uint8_t kGyroConfig1Reg = 0x01;
+static const uint8_t kAccelConfigReg = 0x14;
+
+static const float kAccelScale = 16384.0f;  // +/-2g
+static const float kGyroScale = 131.0f;     // +/-250 dps
+
+int16_t readBigEndian16(uint8_t highByte, uint8_t lowByte) {
+  return (int16_t)((highByte << 8) | lowByte);
+}
+
+}  // namespace
+
+V7RCIcm20948Imu::V7RCIcm20948Imu(uint8_t sdaPin, uint8_t sclPin, uint8_t i2cAddress)
+  : sdaPin_(sdaPin),
+    sclPin_(sclPin),
+    address_(i2cAddress),
+    currentBank_(0xFF),
+    begun_(false),
+    lastUpdateMs_(0),
+    accelXg_(0.0f),
+    accelYg_(0.0f),
+    accelZg_(0.0f),
+    gyroXDegPerSec_(0.0f),
+    gyroYDegPerSec_(0.0f),
+    gyroZDegPerSec_(0.0f) {
+  attitude_.rollDeg = 0.0f;
+  attitude_.pitchDeg = 0.0f;
+  attitude_.yawRateDegPerSec = 0.0f;
+  attitude_.valid = false;
+}
+
+bool V7RCIcm20948Imu::selectBank(uint8_t bank) {
+  if (currentBank_ == bank) {
+    return true;
+  }
+
+  Wire.beginTransmission(address_);
+  Wire.write(kRegBankSel);
+  Wire.write(bank);
+  if (Wire.endTransmission() != 0) {
+    return false;
+  }
+
+  currentBank_ = bank;
+  return true;
+}
+
+bool V7RCIcm20948Imu::writeRegister(uint8_t reg, uint8_t value) {
+  Wire.beginTransmission(address_);
+  Wire.write(reg);
+  Wire.write(value);
+  return Wire.endTransmission() == 0;
+}
+
+bool V7RCIcm20948Imu::readRegisters(uint8_t reg, uint8_t* data, size_t len) {
+  Wire.beginTransmission(address_);
+  Wire.write(reg);
+  if (Wire.endTransmission(false) != 0) {
+    return false;
+  }
+
+  if (Wire.requestFrom((int)address_, (int)len) != (int)len) {
+    return false;
+  }
+
+  for (size_t i = 0; i < len; ++i) {
+    data[i] = (uint8_t)Wire.read();
+  }
+  return true;
+}
+
+bool V7RCIcm20948Imu::begin() {
+  Wire.begin(sdaPin_, sclPin_);
+  currentBank_ = 0xFF;
+
+  if (!selectBank(kBank0)) {
+    begun_ = false;
+    return false;
+  }
+
+  uint8_t whoAmI = 0;
+  if (!readRegisters(kWhoAmIReg, &whoAmI, 1) || whoAmI != kExpectedWhoAmI) {
+    begun_ = false;
+    return false;
+  }
+
+  if (!writeRegister(kPwrMgmt1Reg, 0x01)) {  // Auto selects best available clock.
+    begun_ = false;
+    return false;
+  }
+  if (!writeRegister(kPwrMgmt2Reg, 0x00)) {  // Enable accel + gyro.
+    begun_ = false;
+    return false;
+  }
+
+  if (!selectBank(kBank2)) {
+    begun_ = false;
+    return false;
+  }
+
+  if (!writeRegister(kGyroConfig1Reg, 0x00)) {  // +/-250 dps, DLPF off.
+    begun_ = false;
+    return false;
+  }
+  if (!writeRegister(kAccelConfigReg, 0x00)) {  // +/-2g, DLPF off.
+    begun_ = false;
+    return false;
+  }
+
+  if (!selectBank(kBank0)) {
+    begun_ = false;
+    return false;
+  }
+
+  delay(50);
+  begun_ = true;
+  lastUpdateMs_ = 0;
+  attitude_.valid = false;
+  return true;
+}
+
+bool V7RCIcm20948Imu::readRaw(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz) {
+  if (!selectBank(kBank0)) {
+    return false;
+  }
+
+  uint8_t raw[12];
+  if (!readRegisters(kAccelXoutHReg, raw, sizeof(raw))) {
+    return false;
+  }
+
+  *ax = readBigEndian16(raw[0], raw[1]);
+  *ay = readBigEndian16(raw[2], raw[3]);
+  *az = readBigEndian16(raw[4], raw[5]);
+  *gx = readBigEndian16(raw[6], raw[7]);
+  *gy = readBigEndian16(raw[8], raw[9]);
+  *gz = readBigEndian16(raw[10], raw[11]);
+  return true;
+}
+
+bool V7RCIcm20948Imu::update(unsigned long nowMs) {
+  if (!begun_) return false;
+
+  int16_t ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+  if (!readRaw(&ax, &ay, &az, &gx, &gy, &gz)) {
+    attitude_.valid = false;
+    return false;
+  }
+
+  float dt = 0.0f;
+  if (lastUpdateMs_ != 0 && nowMs > lastUpdateMs_) {
+    dt = (float)(nowMs - lastUpdateMs_) / 1000.0f;
+  }
+  lastUpdateMs_ = nowMs;
+
+  accelXg_ = (float)ax / kAccelScale;
+  accelYg_ = (float)ay / kAccelScale;
+  accelZg_ = (float)az / kAccelScale;
+  gyroXDegPerSec_ = (float)gx / kGyroScale;
+  gyroYDegPerSec_ = (float)gy / kGyroScale;
+  gyroZDegPerSec_ = (float)gz / kGyroScale;
+
+  const float accelRoll = atan2f(accelYg_, accelZg_) * 180.0f / PI;
+  const float accelPitch = atan2f(-accelXg_, sqrtf(accelYg_ * accelYg_ + accelZg_ * accelZg_)) * 180.0f / PI;
+
+  if (!attitude_.valid || dt <= 0.0f) {
+    attitude_.rollDeg = accelRoll;
+    attitude_.pitchDeg = accelPitch;
+  } else {
+    const float alpha = 0.98f;
+    attitude_.rollDeg = alpha * (attitude_.rollDeg + gyroXDegPerSec_ * dt) + (1.0f - alpha) * accelRoll;
+    attitude_.pitchDeg = alpha * (attitude_.pitchDeg + gyroYDegPerSec_ * dt) + (1.0f - alpha) * accelPitch;
+  }
+
+  attitude_.yawRateDegPerSec = gyroZDegPerSec_;
+  attitude_.valid = true;
+  return true;
+}
+
+V7RCDroneAttitude V7RCIcm20948Imu::attitude() const {
+  return attitude_;
+}
+
+const char* V7RCIcm20948Imu::sensorName() const {
+  return "ICM20948";
+}
+
+float V7RCIcm20948Imu::accelXg() const {
+  return accelXg_;
+}
+
+float V7RCIcm20948Imu::accelYg() const {
+  return accelYg_;
+}
+
+float V7RCIcm20948Imu::accelZg() const {
+  return accelZg_;
+}
+
+float V7RCIcm20948Imu::gyroXDegPerSec() const {
+  return gyroXDegPerSec_;
+}
+
+float V7RCIcm20948Imu::gyroYDegPerSec() const {
+  return gyroYDegPerSec_;
+}
+
+float V7RCIcm20948Imu::gyroZDegPerSec() const {
+  return gyroZDegPerSec_;
+}

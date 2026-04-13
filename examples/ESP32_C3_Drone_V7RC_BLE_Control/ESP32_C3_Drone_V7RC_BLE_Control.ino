@@ -6,14 +6,26 @@
 
 namespace {
 
+enum V7RCDroneImuSelection : uint8_t {
+  V7RC_DRONE_IMU_NONE = 0,
+  V7RC_DRONE_IMU_ADXL345,
+  V7RC_DRONE_IMU_ICM20948
+};
+
+static const uint8_t kImuSdaPin = 5;
+static const uint8_t kImuSclPin = 6;
+static const V7RCDroneImuSelection kImuSelection = V7RC_DRONE_IMU_ICM20948;
+
 V7RCDroneRuntime runtime;
+V7RCAdxl345Imu adxl345Imu(kImuSdaPin, kImuSclPin);
+V7RCIcm20948Imu icm20948Imu(kImuSdaPin, kImuSclPin);
 V7RCBleTransportEsp32 transport;
 
 V7RC_DCMotorConfig motors[] = {
-  {20, 21, false},  // front-left
-  {10, 0, false},   // front-right
-  {1, 2, false},    // rear-left
-  {3, 4, false},    // rear-right
+  {21, 20, false},  // front-left
+  {10, 0, true},    // front-right
+  {1, 2, true},     // rear-left
+  {4, 3, false},    // rear-right
 };
 
 V7RCDroneControlState controlState = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -37,6 +49,16 @@ V7RCDroneRuntimeOptions options = {
   .escMaxUs = 2000,
   .escIdleUs = 1080,
 };
+
+V7RCDroneImu* selectedImu() {
+  if (kImuSelection == V7RC_DRONE_IMU_ADXL345) {
+    return &adxl345Imu;
+  }
+  if (kImuSelection == V7RC_DRONE_IMU_ICM20948) {
+    return &icm20948Imu;
+  }
+  return nullptr;
+}
 
 uint32_t robotIdFromBleMac() {
   uint8_t mac[6];
@@ -168,7 +190,21 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  runtime.begin(options, nullptr);
+  // IMU selection:
+  //   V7RC_DRONE_IMU_NONE
+  //   V7RC_DRONE_IMU_ADXL345
+  //   V7RC_DRONE_IMU_ICM20948
+  //
+  // If you use ADXL345 and the mounting direction differs from the airframe logic,
+  // adjust the axis transform here:
+  // adxl345Imu.setAxisTransform(
+  //   V7RC_ADXL345_AXIS_Y,  1,
+  //   V7RC_ADXL345_AXIS_X, -1,
+  //   V7RC_ADXL345_AXIS_Z,  1
+  // );
+
+  V7RCDroneImu* imu = selectedImu();
+  const bool imuReady = runtime.begin(options, imu);
   runtime.setStabilizationEnabled(stabilizationEnabled);
 
   char deviceName[20];
@@ -178,7 +214,13 @@ void setup() {
   transport.setConnectionHandler(handleConnectionChanged, nullptr);
   transport.begin(deviceName);
 
-  Serial.println("Drone BLE control ready (DC motor mode, IMU disabled, locked on boot).");
+  Serial.printf(
+    "Drone BLE control ready (DC motor mode, IMU=%s, SDA=%u, SCL=%u, locked on boot).\n",
+    imu ? (imuReady ? imu->sensorName() : "OFFLINE") : "DISABLED",
+    kImuSdaPin,
+    kImuSclPin
+  );
+  Serial.println("Motor rotation config: FL=normal, FR=invert, RL=invert, RR=normal.");
   Serial.println("V7RC App channels: ch0=Yaw, ch1=Throttle(1000->0, 2000->max), ch2=Pitch, ch3=Roll, ch4=Stabilize.");
   Serial.println("Unlock gesture: ch0=1000, ch1=1000, ch2=1000, ch3=2000.");
 }

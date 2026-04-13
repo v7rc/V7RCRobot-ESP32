@@ -38,6 +38,7 @@ Arduino IDE → Tools → Manage Libraries：
 - 乾淨版麥克納姆：`examples/ESP32_C3_Mini_Mecanum_Clean/ESP32_C3_Mini_Mecanum_Clean.ino`
 - Runtime Demo 坦克：`examples/ESP32_C3_Tank_Runtime_Demo/ESP32_C3_Tank_Runtime_Demo.ino`
 - Drone Runtime Demo：`examples/ESP32_C3_Drone_Runtime_Demo/ESP32_C3_Drone_Runtime_Demo.ino`
+- ADXL345 整合驗證：`examples/ESP32_C3_ADXL345_Integration_Check/ESP32_C3_ADXL345_Integration_Check.ino`
 - V7RC BLE Drone 控制：`examples/ESP32_C3_Drone_V7RC_BLE_Control/ESP32_C3_Drone_V7RC_BLE_Control.ino`
 - Dog Runtime Demo：`examples/ESP32_C3_Dog_Runtime_Demo/ESP32_C3_Dog_Runtime_Demo.ino`
 - Dog Runtime Demo V2：`examples/ESP32_C3_Dog_Runtime_Demo_V2/ESP32_C3_Dog_Runtime_Demo_V2.ino`
@@ -63,6 +64,8 @@ Arduino IDE → Tools → Manage Libraries：
 注意：
 
 - `*_Runtime_Demo` 是本地 runtime / mixer 驗證用，不會等 V7RC App 的 BLE 指令
+- `ESP32_C3_ADXL345_Integration_Check` 會單獨列印 ADXL345 的 `ax/ay/az(g)` 與 `roll/pitch`，適合先驗證 I2C 接線與感測器輸出
+- `ESP32_C3_Drone_V7RC_BLE_Control` 支援在 sketch 頂部切換 `V7RC_DRONE_IMU_NONE`、`V7RC_DRONE_IMU_ADXL345`、`V7RC_DRONE_IMU_ICM20948`，目前預設為 `ICM20948`
 - 如果你要真的用 V7RC App 開車，請優先用 `ESP32_C3_Mecanum_V7RC_BLE_Control` 或 `ESP32_C3_Mini_Mecanum_Clean`
 
 如果你要直接試四足 runtime，則可透過：

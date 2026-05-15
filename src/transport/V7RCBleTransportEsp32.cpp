@@ -41,6 +41,9 @@ public:
 
     NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
     advertising->reset();
+    // Put the local name into scan response so iOS scanners can read the
+    // complete BLE name even when the primary advertisement also carries UUIDs.
+    advertising->enableScanResponse(true);
     advertising->addServiceUUID(service->getUUID());
     advertising->setName(deviceName ? deviceName : "V7RC");
     NimBLEDevice::startAdvertising();

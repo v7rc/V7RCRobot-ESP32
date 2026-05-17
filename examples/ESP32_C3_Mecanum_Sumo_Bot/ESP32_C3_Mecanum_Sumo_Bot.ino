@@ -14,10 +14,10 @@ const uint8_t kUltrasonicEchoPin = 6;
 const uint8_t kLineDetectedLevel = LOW;
 const bool kUseLineSensorPullups = true;
 const unsigned long kLineCheckIntervalMs = 10;
-const unsigned long kUltrasonicCheckIntervalMs = 30;
-const unsigned long kUltrasonicPulseTimeoutUs = 4000;
-const float kStartDistanceCm = 5.0f;
-const float kAttackDistanceCm = 50.0f;
+const unsigned long kUltrasonicCheckIntervalMs = 20;
+const unsigned long kUltrasonicPulseTimeoutUs = 7000;
+const float kStartPresenceDistanceCm = 20.0f;
+const float kAttackDistanceCm = 100.0f;
 
 // -------------------- Configurable debug parameters --------------------
 const bool kSerialDebugEnabled = true;
@@ -28,8 +28,9 @@ const unsigned long kStartCountdownMs = 3000;
 const unsigned long kOpeningForwardMs = 1000;
 const unsigned long kOpeningStopMs = 100;
 const unsigned long kOpeningTurnMs = 200;
-const unsigned long kLineEscapeReverseMs = 200;
+const unsigned long kLineEscapeReverseMs = 500;
 const unsigned long kLineEscapeTurnMs = 500;
+const unsigned long kLineEscapeForwardMs = 1000;
 
 const float kOpeningForwardSpeed = 0.85f;
 const float kAttackForwardSpeed = 1.0f;
@@ -37,12 +38,13 @@ const float kSearchTurnSpeed = 0.35f;
 const float kOpeningTurnSpeed = 0.55f;
 const float kEscapeReverseSpeed = -0.65f;
 const float kEscapeTurnSpeed = 0.65f;
+const float kEscapeForwardSpeed = 0.70f;
 
 // Update these pins and dirInvert flags to match your motor driver wiring.
 V7RC_DCMotorConfig motors[] = {
   {20, 21, false},  // front-left
   {10, 0, false},   // front-right
-  {1, 2, false},    // rear-left
+  {2, 1, false},    // rear-left
   {3, 4, false},    // rear-right
 };
 
@@ -72,6 +74,7 @@ V7RCCarRobotOptions robotOptions = {
 
 enum SumoState : uint8_t {
   SUMO_WAIT_FOR_TARGET = 0,
+  SUMO_WAIT_FOR_START_CLEAR,
   SUMO_COUNTDOWN,
   SUMO_OPENING_FORWARD,
   SUMO_OPENING_STOP,
@@ -80,6 +83,7 @@ enum SumoState : uint8_t {
   SUMO_ATTACK,
   SUMO_ESCAPE_REVERSE,
   SUMO_ESCAPE_TURN,
+  SUMO_ESCAPE_FORWARD,
 };
 
 SumoState state = SUMO_WAIT_FOR_TARGET;
@@ -126,6 +130,8 @@ const char* stateName(SumoState value) {
   switch (value) {
     case SUMO_WAIT_FOR_TARGET:
       return "WAIT_FOR_TARGET";
+    case SUMO_WAIT_FOR_START_CLEAR:
+      return "WAIT_FOR_START_CLEAR";
     case SUMO_COUNTDOWN:
       return "COUNTDOWN";
     case SUMO_OPENING_FORWARD:
@@ -142,6 +148,8 @@ const char* stateName(SumoState value) {
       return "ESCAPE_REVERSE";
     case SUMO_ESCAPE_TURN:
       return "ESCAPE_TURN";
+    case SUMO_ESCAPE_FORWARD:
+      return "ESCAPE_FORWARD";
   }
   return "UNKNOWN";
 }
@@ -152,6 +160,7 @@ void enterState(SumoState nextState) {
 
   switch (state) {
     case SUMO_WAIT_FOR_TARGET:
+    case SUMO_WAIT_FOR_START_CLEAR:
     case SUMO_COUNTDOWN:
     case SUMO_OPENING_STOP:
       applyStop();
@@ -176,6 +185,9 @@ void enterState(SumoState nextState) {
     case SUMO_ESCAPE_TURN:
       turnDirection = escapeTurnDirection();
       applyDrive(0.0f, 0.0f, turnDirection * kEscapeTurnSpeed);
+      break;
+    case SUMO_ESCAPE_FORWARD:
+      applyDrive(kEscapeForwardSpeed, 0.0f, 0.0f);
       break;
   }
 }
@@ -223,9 +235,11 @@ bool hasTargetWithin(float distanceCm) {
 bool shouldProtectLine() {
   return (leftLineDetected || rightLineDetected) &&
          state != SUMO_WAIT_FOR_TARGET &&
+         state != SUMO_WAIT_FOR_START_CLEAR &&
          state != SUMO_COUNTDOWN &&
          state != SUMO_ESCAPE_REVERSE &&
-         state != SUMO_ESCAPE_TURN;
+         state != SUMO_ESCAPE_TURN &&
+         state != SUMO_ESCAPE_FORWARD;
 }
 
 void updateDebug(unsigned long nowMs) {
@@ -259,11 +273,20 @@ void updateSumoState() {
 
   switch (state) {
     case SUMO_WAIT_FOR_TARGET:
-      if (hasTargetWithin(kStartDistanceCm)) {
+      if (hasTargetWithin(kStartPresenceDistanceCm)) {
+        enterState(SUMO_WAIT_FOR_START_CLEAR);
+      }
+      break;
+    case SUMO_WAIT_FOR_START_CLEAR:
+      if (!hasTargetWithin(kStartPresenceDistanceCm)) {
         enterState(SUMO_COUNTDOWN);
       }
       break;
     case SUMO_COUNTDOWN:
+      if (hasTargetWithin(kStartPresenceDistanceCm)) {
+        enterState(SUMO_WAIT_FOR_START_CLEAR);
+        break;
+      }
       if (elapsed(kStartCountdownMs)) {
         enterState(SUMO_OPENING_FORWARD);
       }
@@ -300,6 +323,11 @@ void updateSumoState() {
       break;
     case SUMO_ESCAPE_TURN:
       if (elapsed(kLineEscapeTurnMs)) {
+        enterState(SUMO_ESCAPE_FORWARD);
+      }
+      break;
+    case SUMO_ESCAPE_FORWARD:
+      if (elapsed(kLineEscapeForwardMs)) {
         enterState(SUMO_SEARCH);
       }
       break;

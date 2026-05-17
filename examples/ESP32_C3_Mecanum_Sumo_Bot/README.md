@@ -11,15 +11,16 @@
   - GPIO6: echo
 - Boot behavior:
   - Motors stay stopped after startup.
-  - When HC-SR04 sees a target within 5 cm, wait 3 seconds.
+  - When HC-SR04 sees a target within 20 cm, wait for the target to be removed.
+  - After the target is removed from the 20 cm start zone, wait 3 seconds.
   - Start the SUMO routine after the countdown.
 - SUMO routine:
   - Drive forward quickly for 1 second.
   - Stop briefly.
   - Randomly rotate left or right for 0.2 seconds.
   - Check both line sensors every 10 ms.
-  - If either sensor detects the ring line, immediately back up for 0.2 seconds, then rotate away from the triggered side for 0.5 seconds.
-  - If HC-SR04 detects an object within 50 cm, charge forward at full power.
+  - If either sensor detects the ring line, immediately back up for 0.5 seconds, rotate away from the triggered side for 0.5 seconds, then drive forward for 1 second before returning to target search.
+  - If HC-SR04 detects an object within 100 cm, charge forward at full power.
   - Line detection always has priority over target charging.
 - Serial debug mode can print distance, left/right line sensor state, SUMO state, and turn direction.
 - All timing, speed, pin, polarity, and distance thresholds are configurable constants at the top of the sketch.

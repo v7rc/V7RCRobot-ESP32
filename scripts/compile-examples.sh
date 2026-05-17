@@ -40,6 +40,7 @@ compile_example "examples/ESP32_C3_Drone_V7RC_BLE_Control" "$BUILD_ROOT/drone-v7
 compile_example "examples/ESP32_C3_Drone_Runtime_Demo" "$BUILD_ROOT/drone-runtime"
 compile_example "examples/ESP32_C3_ICM20948_Integration_Check" "$BUILD_ROOT/icm20948-check"
 compile_example "examples/ESP32_C3_Mecanum_Runtime_Demo" "$BUILD_ROOT/mec-runtime"
+compile_example "examples/ESP32_C3_Mecanum_Sumo_Bot" "$BUILD_ROOT/mec-sumo-bot"
 compile_example "examples/ESP32_C3_Mecanum_V7RC_BLE_Control" "$BUILD_ROOT/mec-v7rc-ble"
 compile_example "examples/ESP32_C3_Mini_Mecanum_Clean" "$BUILD_ROOT/mec-clean"
 compile_example "examples/ESP32_C3_Mini_Mecanum_V3" "$BUILD_ROOT/mec"

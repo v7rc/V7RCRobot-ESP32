@@ -19,7 +19,7 @@
   - Stop briefly.
   - Randomly rotate left or right for 0.2 seconds.
   - Check both line sensors every 10 ms.
-  - If either sensor detects the ring line, immediately back up for 0.5 seconds, rotate away from the triggered side for 0.5 seconds, then drive forward for 1 second before returning to target search.
+  - If either sensor detects the ring line, immediately back up for 1 second, rotate away from the triggered side for 1 second, then drive forward for 1 second before returning to target search.
   - If HC-SR04 detects an object within 100 cm, charge forward at full power.
   - Line detection always has priority over target charging.
 - Serial debug mode can print distance, left/right line sensor state, SUMO state, and turn direction.

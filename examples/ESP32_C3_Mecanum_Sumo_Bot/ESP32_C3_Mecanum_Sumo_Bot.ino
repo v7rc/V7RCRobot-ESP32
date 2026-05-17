@@ -28,13 +28,13 @@ const unsigned long kStartCountdownMs = 3000;
 const unsigned long kOpeningForwardMs = 1000;
 const unsigned long kOpeningStopMs = 100;
 const unsigned long kOpeningTurnMs = 200;
-const unsigned long kLineEscapeReverseMs = 500;
-const unsigned long kLineEscapeTurnMs = 500;
+const unsigned long kLineEscapeReverseMs = 1000;
+const unsigned long kLineEscapeTurnMs = 1000;
 const unsigned long kLineEscapeForwardMs = 1000;
 
 const float kOpeningForwardSpeed = 0.85f;
 const float kAttackForwardSpeed = 1.0f;
-const float kSearchTurnSpeed = 0.35f;
+const float kSearchTurnSpeed = 0.50f;
 const float kOpeningTurnSpeed = 0.55f;
 const float kEscapeReverseSpeed = -0.65f;
 const float kEscapeTurnSpeed = 0.65f;
